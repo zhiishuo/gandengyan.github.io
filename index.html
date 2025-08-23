@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>干瞪眼 记分板（手机版·全功能 + 实时预览）</title>
+<title>干瞪眼 记分板（手机版·全功能 + 春天）</title>
 <style>
   :root { --bg:#0b1023; --panel:#101935; --ink:#e6eaf2; --muted:#9aa6c4; --line:rgba(154,166,196,.25); --accent:#22c55e; --warn:#ef4444; --info:#38bdf8;}
   *{box-sizing:border-box}
@@ -23,7 +23,7 @@
   table{width:100%;border-collapse:collapse;font-size:16px}
   th,td{border-bottom:1px dashed var(--line);padding:10px 6px;text-align:center}
   th{text-align:center;color:#c7d2fe}
-  .num{width:100px;text-align:right}
+  .num{width:88px;text-align:right}
   .name{width:160px}
   .muted{color:var(--muted);font-size:14px}
   .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
@@ -38,10 +38,12 @@
   .badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#0b1220;border:1px solid var(--line);font-size:12px}
   .live{color:#caffdd}
   .info{color:#9ee8ff}
+  .springTag{display:inline-block;padding:2px 6px;border:1px solid var(--line);border-radius:999px;background:#13233e;font-size:12px;color:#a7ffbf;margin-left:6px}
+  label.spring{display:inline-flex;align-items:center;gap:6px}
 </style>
 </head>
 <body>
-<header><h1>干瞪眼 · 记分板（手机版·全功能 + 实时预览）</h1></header>
+<header><h1>干瞪眼 · 记分板（手机版·全功能 + 春天）</h1></header>
 <main>
   <section class="panel">
     <h2>玩家与人数</h2>
@@ -97,7 +99,7 @@
       </div>
       <div class="flex" style="gap:8px; margin-top:8px; flex-wrap:wrap" id="winnerQuick"></div>
       <table style="margin-top:8px">
-        <thead><tr><th>#</th><th>玩家</th><th>剩牌</th></tr></thead>
+        <thead><tr><th>#</th><th>玩家</th><th>剩牌</th><th>春天</th></tr></thead>
         <tbody id="remainBody"></tbody>
       </table>
     </div>
@@ -115,7 +117,7 @@
     </div>
 
     <div class="tag" style="margin-top:10px">
-      <div class="kv"><span class="k">本轮预览（含倍数）</span><span class="badge">不入账，只预览</span></div>
+      <div class="kv"><span class="k">本轮预览（含倍数/春天）</span><span class="badge">不入账，只预览</span></div>
       <div id="previewBox" class="mono live" style="margin-top:6px">—</div>
       <div id="winnerPot" class="mono info" style="margin-top:6px"></div>
     </div>
@@ -150,7 +152,7 @@
 </div>
 
 <script>
-const LS_KEY="gandengyan_scoreboard_mobile_full_v1";
+const LS_KEY="gandengyan_scoreboard_mobile_full_v2_spring";
 let state = {
   players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
   history: [],
@@ -221,12 +223,17 @@ function renderRemainArea(){
     tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td>
       <td><input type="number" min="0" step="1" inputmode="numeric"
           class="num mono remainInp" data-idx="${i}" ${isWinner?"disabled":""}
-          placeholder="${isWinner?"赢家=0":"剩牌数"}"></td>`;
+          placeholder="${isWinner?"赢家=0":"剩牌数"}"></td>
+      <td>
+        <label class="spring">
+          <input type="checkbox" class="springChk" data-idx="${i}" ${isWinner?"disabled":""}>
+          春天
+        </label>
+      </td>`;
     rb.appendChild(tr);
   });
-  rb.querySelectorAll(".remainInp").forEach(inp=>{
-    inp.addEventListener("input", recomputePreview);
-  });
+  rb.querySelectorAll(".remainInp").forEach(inp=> inp.addEventListener("input", recomputePreview));
+  rb.querySelectorAll(".springChk").forEach(chk=> chk.addEventListener("change", recomputePreview));
 
   const mb = document.querySelector("#manualBody"); mb.innerHTML="";
   state.players.forEach((p,i)=>{
@@ -271,7 +278,10 @@ function computeRound(){
   if (mode==="remain"){
     const winnerIdx = state.remainWinner;
     const inputs = [...document.querySelectorAll(".remainInp")];
+    const springs = [...document.querySelectorAll(".springChk")];
     const remain = Array(n).fill(0);
+    const springMark = Array(n).fill(false);
+
     for (const inp of inputs){
       const i = +inp.dataset.idx;
       const raw = inp.value.trim();
@@ -282,17 +292,23 @@ function computeRound(){
         remain[i] = v;
       }
     }
+    for (const chk of springs){
+      const i = +chk.dataset.idx;
+      springMark[i] = !!chk.checked && i!==winnerIdx; // 赢家无效
+    }
+
     const delta = Array(n).fill(0);
     let pot = 0;
     for (let i=0;i<n;i++){
       if (i===winnerIdx) continue;
-      const loss = - remain[i]*m;
+      const springMul = springMark[i] ? 2 : 1;
+      const loss = - remain[i]*m*springMul;
       delta[i] = loss;
       pot += -loss;
     }
     delta[winnerIdx] = pot;
-    const remDesc = remain.map((v,i)=> `${state.players[i].name}:${v}`).join("， ");
-    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[winnerIdx].name} ｜ 剩牌：[${remDesc}] ×${m}`};
+    const remDesc = remain.map((v,i)=> `${state.players[i].name}:${v}${springMark[i]?'(春)':''}`).join("， ");
+    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[winnerIdx].name} ｜ 剩牌：[${remDesc}] ×${m}`, springs: springMark};
   } else if (mode==="winner1"){
     const sel = document.querySelector("#winnerList").dataset.selected;
     if (sel===undefined) return {error:"请选择胜者"};
@@ -334,8 +350,14 @@ function recomputePreview(){
 function commitRound(){
   const res = computeRound();
   if (res.error){ alert(res.error); return; }
+  // 将春天信息附加到描述（如果存在）
+  if (res.springs){
+    const list = res.springs.map((v,i)=> v?state.players[i].name:null).filter(Boolean);
+    if (list.length) res.desc += ` ｜ 春天：${list.join('、')}`;
+  }
   applyRound(res.delta, res.desc);
   document.querySelectorAll(".remainInp").forEach(inp=>{ if (!inp.disabled) inp.value=""; });
+  document.querySelectorAll(".springChk").forEach(chk=>{ if (!chk.disabled) chk.checked=false; });
   document.querySelectorAll(".manualInp").forEach(inp=> inp.value="");
   document.querySelector("#winnerList").dataset.selected="";
   recomputePreview();
@@ -394,7 +416,7 @@ function exportCsv(){
   const csv = rows.map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download="gandengyan_scores_mobile_full.csv"; a.click();
+  const a = document.createElement("a"); a.href=url; a.download="gandengyan_scores_mobile_full_spring.csv"; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
