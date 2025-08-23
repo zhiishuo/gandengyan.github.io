@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>干瞪眼 记分板（手机版·全功能 + 实时预览）</title>
+<style>
+  :root { --bg:#0b1023; --panel:#101935; --ink:#e6eaf2; --muted:#9aa6c4; --line:rgba(154,166,196,.25); --accent:#22c55e; --warn:#ef4444; --info:#38bdf8;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--ink);background:#0b1023}
+  header{position:sticky;top:0;z-index:10;background:#0b1023;border-bottom:1px solid var(--line);padding:14px 16px}
+  h1{margin:0;font-size:18px}
+  main{padding:12px;display:grid;gap:12px}
+  .panel{background:#101935;border:1px solid var(--line);border-radius:14px;padding:12px}
+  .panel h2{margin:4px 0 10px;font-size:16px}
+  input,select,button{border-radius:12px;border:1px solid var(--line);background:#0b1220;color:var(--ink);padding:12px 14px;font-size:16px}
+  button{cursor:pointer;min-height:44px}
+  .btn{padding:12px 16px}
+  .btn.accent{background:#0f2b1b;border-color:#1b5e38;color:#caffdd}
+  .btn.warn{background:#3a1212;border-color:#6a1d1d;color:#ffd5d5}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0b1220}
+  table{width:100%;border-collapse:collapse;font-size:16px}
+  th,td{border-bottom:1px dashed var(--line);padding:10px 6px;text-align:center}
+  th{text-align:center;color:#c7d2fe}
+  .num{width:100px;text-align:right}
+  .name{width:160px}
+  .muted{color:var(--muted);font-size:14px}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .winnerSelect{min-width:220px}
+  .tag{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#0b1220}
+  .chip{padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:#0b1220}
+  .chip.active{outline:3px solid var(--accent)}
+  .footerBar{position:sticky;bottom:0;background:#0b1023;border-top:1px solid var(--line);padding:10px;display:flex;gap:10px;z-index:10}
+  .footerBar .btn{flex:1}
+  .kv{display:flex;justify-content:space-between;gap:8px}
+  .kv .k{color:#9fb0ff}
+  .badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#0b1220;border:1px solid var(--line);font-size:12px}
+  .live{color:#caffdd}
+  .info{color:#9ee8ff}
+</style>
+</head>
+<body>
+<header><h1>干瞪眼 · 记分板（手机版·全功能 + 实时预览）</h1></header>
+<main>
+  <section class="panel">
+    <h2>玩家与人数</h2>
+    <div class="flex">
+      <span class="pill">人数：<b id="playerCountEcho">7</b></span>
+      <button class="btn" id="minusP">－1</button>
+      <button class="btn" id="plusP">＋1</button>
+    </div>
+    <div class="flex" style="margin-top:8px">
+      <label>设为：<input id="setP" class="num mono" value="7" style="width:90px"></label>
+      <button class="btn accent" id="applyP">应用人数</button>
+    </div>
+    <table style="margin-top:8px">
+      <thead><tr><th>#</th><th>玩家名</th><th>分</th></tr></thead>
+      <tbody id="playersBody"></tbody>
+    </table>
+    <div class="flex" style="margin-top:8px">
+      <button class="btn accent" id="resetNames">重置名字</button>
+      <button class="btn" id="zeroScores">分数清零</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>模式 & 倍数</h2>
+    <div class="flex">
+      <label>模式
+        <select id="mode">
+          <option value="remain" selected>剩牌结算</option>
+          <option value="winner1">胜者 +1</option>
+          <option value="manual">手工输入</option>
+        </select>
+      </label>
+    </div>
+    <div class="tag" style="margin-top:10px">
+      <div class="flex">
+        <span class="pill">炸弹：</span>
+        <button class="btn" id="bombDec">-</button>
+        <input id="bombCount" class="num mono" value="0" inputmode="numeric" />
+        <button class="btn" id="bombInc">+</button>
+        <span class="pill">倍数：<b id="multEcho" class="mono">×1</b></span>
+        <button class="btn" id="bombReset">清零</button>
+      </div>
+      <div class="muted" style="margin-top:6px">k 个炸弹 → 本轮 <b>×2^k</b></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>记一轮（实时预览）</h2>
+    <div id="modeRemain">
+      <div class="flex" style="gap:8px; flex-wrap:wrap">
+        <span class="pill">赢家：</span>
+        <select id="remainWinner" class="winnerSelect"></select>
+      </div>
+      <div class="flex" style="gap:8px; margin-top:8px; flex-wrap:wrap" id="winnerQuick"></div>
+      <table style="margin-top:8px">
+        <thead><tr><th>#</th><th>玩家</th><th>剩牌</th></tr></thead>
+        <tbody id="remainBody"></tbody>
+      </table>
+    </div>
+
+    <div id="modeWinner1" style="display:none">
+      <div class="muted">点选本轮胜者：</div>
+      <div id="winnerList" class="flex" style="gap:8px; flex-wrap:wrap; margin-top:6px"></div>
+    </div>
+
+    <div id="modeManual" style="display:none">
+      <table>
+        <thead><tr><th>#</th><th>玩家</th><th>分</th></tr></thead>
+        <tbody id="manualBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tag" style="margin-top:10px">
+      <div class="kv"><span class="k">本轮预览（含倍数）</span><span class="badge">不入账，只预览</span></div>
+      <div id="previewBox" class="mono live" style="margin-top:6px">—</div>
+      <div id="winnerPot" class="mono info" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>实时排名</h2>
+    <table>
+      <thead><tr><th>名次</th><th>玩家</th><th>总分</th></tr></thead>
+      <tbody id="rankingBody"></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>历史</h2>
+    <table>
+      <thead><tr><th>#</th><th>明细</th><th>操作</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div class="flex" style="margin-top:8px">
+      <button class="btn" id="undo">撤销上一回合</button>
+      <button class="btn warn" id="clearHistory">清空历史</button>
+      <button class="btn" id="exportCsv">导出 CSV</button>
+    </div>
+  </section>
+</main>
+
+<div class="footerBar">
+  <button class="btn" id="exportCsv_m">导出</button>
+  <button class="btn" id="clearHistory_m">清空</button>
+  <button class="btn accent" id="commit_m">入账</button>
+</div>
+
+<script>
+const LS_KEY="gandengyan_scoreboard_mobile_full_v1";
+let state = {
+  players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
+  history: [],
+  bombCount: 0,
+  remainWinner: 0,
+};
+
+function N(){ return state.players.length; }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function load(){ const s = localStorage.getItem(LS_KEY); if (s){ try{ state = JSON.parse(s); }catch(e){} } }
+function mult(){ return Math.pow(2, Math.max(0, +state.bombCount||0)); }
+function echoMult(){ document.querySelector("#multEcho").textContent = "×"+mult(); }
+
+function renderPlayers(){
+  document.querySelector("#playerCountEcho").textContent = String(N());
+  document.querySelector("#setP").value = String(N());
+  const tb = document.querySelector("#playersBody"); tb.innerHTML="";
+  state.players.forEach((p,idx)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${p.name}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll("input.name").forEach(inp=>{
+    inp.addEventListener("input", e=>{
+      const i = +e.target.dataset.idx;
+      state.players[i].name = e.target.value || ("玩家"+(i+1));
+      save(); renderRemainArea(); renderWinnerButtons(); renderRanking(); recomputePreview();
+    });
+  });
+  renderRanking();
+}
+
+function renderWinnerButtons(){
+  const q = document.querySelector("#winnerQuick"); q.innerHTML="";
+  state.players.forEach((p,i)=>{
+    const b = document.createElement("button");
+    b.className = "chip" + (i===state.remainWinner? " active": "");
+    b.textContent = p.name;
+    b.addEventListener("click", ()=>{ state.remainWinner = i; save(); renderRemainArea(); renderWinnerButtons(); recomputePreview(); });
+    q.appendChild(b);
+  });
+  const w = document.querySelector("#winnerList"); w.innerHTML="";
+  state.players.forEach((p,i)=>{
+    const btn = document.createElement("button"); btn.className="btn"; btn.textContent=p.name;
+    btn.addEventListener("click", ()=>{
+      w.dataset.selected = i;
+      [...w.querySelectorAll(".btn")].forEach(x=>x.style.outline="none");
+      btn.style.outline="3px solid var(--accent)";
+      recomputePreview();
+    });
+    w.appendChild(btn);
+  });
+}
+
+function renderRemainArea(){
+  const sel = document.querySelector("#remainWinner"); sel.innerHTML="";
+  state.players.forEach((p,i)=>{
+    const opt = document.createElement("option"); opt.value=i; opt.textContent=p.name; sel.appendChild(opt);
+  });
+  if (state.remainWinner >= N()) state.remainWinner = 0;
+  sel.value = String(state.remainWinner);
+  sel.onchange = ()=>{ state.remainWinner = +sel.value; save(); renderRemainArea(); renderWinnerButtons(); recomputePreview(); };
+
+  const rb = document.querySelector("#remainBody"); rb.innerHTML="";
+  state.players.forEach((p,i)=>{
+    const isWinner = (i===state.remainWinner);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td>
+      <td><input type="number" min="0" step="1" inputmode="numeric"
+          class="num mono remainInp" data-idx="${i}" ${isWinner?"disabled":""}
+          placeholder="${isWinner?"赢家=0":"剩牌数"}"></td>`;
+    rb.appendChild(tr);
+  });
+  rb.querySelectorAll(".remainInp").forEach(inp=>{
+    inp.addEventListener("input", recomputePreview);
+  });
+
+  const mb = document.querySelector("#manualBody"); mb.innerHTML="";
+  state.players.forEach((p,i)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
+    mb.appendChild(tr);
+  });
+  mb.querySelectorAll(".manualInp").forEach(inp=> inp.addEventListener("input", recomputePreview));
+}
+
+function renderRanking(){
+  const rb = document.querySelector("#rankingBody"); rb.innerHTML="";
+  const arr = state.players.map((p,i)=>({i, name:p.name, score:p.score}));
+  arr.sort((a,b)=> b.score - a.score || a.i - b.i);
+  arr.forEach((r,idx)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td class="mono">${r.score}</td>`;
+    rb.appendChild(tr);
+  });
+}
+
+function switchMode(){
+  const mode = document.querySelector("#mode").value;
+  document.querySelector("#modeRemain").style.display = (mode==="remain")?"block":"none";
+  document.querySelector("#modeWinner1").style.display = (mode==="winner1")?"block":"none";
+  document.querySelector("#modeManual").style.display = (mode==="manual")?"block":"none";
+  recomputePreview();
+}
+
+function applyRound(delta, desc){
+  const m = mult();
+  state.players.forEach((p,i)=> p.score += (delta[i]||0));
+  state.history.push({desc, delta, bombs: state.bombCount, mult: m});
+  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory();
+  save();
+}
+
+function computeRound(){
+  const mode = document.querySelector("#mode").value;
+  const n = N();
+  const m = mult();
+  if (mode==="remain"){
+    const winnerIdx = state.remainWinner;
+    const inputs = [...document.querySelectorAll(".remainInp")];
+    const remain = Array(n).fill(0);
+    for (const inp of inputs){
+      const i = +inp.dataset.idx;
+      const raw = inp.value.trim();
+      const v = raw==="" ? 0 : Number(raw);
+      if (i===winnerIdx) remain[i] = 0;
+      else {
+        if (!Number.isFinite(v) || v<0 || Math.floor(v)!==v) return {error:"剩牌必须是非负整数"};
+        remain[i] = v;
+      }
+    }
+    const delta = Array(n).fill(0);
+    let pot = 0;
+    for (let i=0;i<n;i++){
+      if (i===winnerIdx) continue;
+      const loss = - remain[i]*m;
+      delta[i] = loss;
+      pot += -loss;
+    }
+    delta[winnerIdx] = pot;
+    const remDesc = remain.map((v,i)=> `${state.players[i].name}:${v}`).join("， ");
+    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[winnerIdx].name} ｜ 剩牌：[${remDesc}] ×${m}`};
+  } else if (mode==="winner1"){
+    const sel = document.querySelector("#winnerList").dataset.selected;
+    if (sel===undefined) return {error:"请选择胜者"};
+    const idx = +sel;
+    const delta = Array(n).fill(0); delta[idx] = 1*m;
+    return {delta, desc:`胜者：${state.players[idx].name}（+1×${m}）`};
+  } else {
+    // manual
+    const inputs = [...document.querySelectorAll(".manualInp")];
+    const delta = Array(n).fill(0);
+    for (const inp of inputs){
+      const i = +inp.dataset.idx;
+      const raw = inp.value.trim();
+      const v = raw==="" ? 0 : Number(raw);
+      if (!Number.isFinite(v)) return {error:"请输入数字"};
+      delta[i] = v*m;
+    }
+    return {delta, desc:`手工输入 ×${m}`};
+  }
+}
+
+function recomputePreview(){
+  const res = computeRound();
+  const box = document.querySelector("#previewBox");
+  const pot = document.querySelector("#winnerPot");
+  if (res.error){
+    box.textContent = "— " + res.error;
+    pot.textContent = "";
+    return;
+  }
+  const signs = res.delta.map((v,i)=> `${state.players[i].name}:${v>=0?'+':''}${v}`);
+  box.textContent = signs.join("， ");
+  if (document.querySelector("#mode").value==="remain"){
+    const w = state.remainWinner;
+    pot.textContent = `赢家（${state.players[w].name}）本轮预计：+${res.delta[w]}`;
+  } else pot.textContent = "";
+}
+
+function commitRound(){
+  const res = computeRound();
+  if (res.error){ alert(res.error); return; }
+  applyRound(res.delta, res.desc);
+  document.querySelectorAll(".remainInp").forEach(inp=>{ if (!inp.disabled) inp.value=""; });
+  document.querySelectorAll(".manualInp").forEach(inp=> inp.value="");
+  document.querySelector("#winnerList").dataset.selected="";
+  recomputePreview();
+}
+
+function renderHistory(){
+  const tb = document.querySelector("#historyBody"); tb.innerHTML="";
+  state.history.forEach((h,ri)=>{
+    const tr = document.createElement("tr");
+    const detail = h.delta.map((v,i)=> `${state.players[i]?.name||("玩家"+(i+1))}:${v>=0?'+':''}${v}`).join("， ");
+    tr.innerHTML = `<td>${ri+1}</td>
+      <td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
+      <td><button class="btn" data-del="${ri}">删除</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll("button[data-del]").forEach(b=> b.addEventListener("click", ()=>deleteRound(+b.dataset.del)));
+}
+
+function deleteRound(idx){
+  const h = state.history[idx];
+  if (!h) return;
+  state.players.forEach((p,i)=> p.score -= (h.delta[i]||0));
+  state.history.splice(idx,1);
+  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
+  recomputePreview();
+}
+
+function undo(){
+  if (!state.history.length) return;
+  deleteRound(state.history.length-1);
+}
+
+function bindBombUI(){
+  const bc = document.querySelector("#bombCount");
+  const dec = document.querySelector("#bombDec");
+  const inc = document.querySelector("#bombInc");
+  const rst = document.querySelector("#bombReset");
+  bc.value = state.bombCount||0;
+  echoMult();
+  function sync(v){
+    const k = Math.max(0, Math.floor(Number(v)||0));
+    state.bombCount = k; bc.value = k; echoMult(); save(); recomputePreview();
+  }
+  bc.addEventListener("input", ()=> sync(bc.value));
+  dec.addEventListener("click", ()=> sync((+bc.value||0)-1));
+  inc.addEventListener("click", ()=> sync((+bc.value||0)+1));
+  rst.addEventListener("click", ()=> sync(0));
+}
+
+function exportCsv(){
+  const header = ["Round", ...state.players.map(p=>p.name), "Bombs", "Multiplier", "Desc"];
+  const rows = [header];
+  state.history.forEach((h,ri)=>{ rows.push([ri+1, ...state.players.map((_,i)=> h.delta[i]||0), h.bombs, h.mult, h.desc]); });
+  const totals = ["TOTAL", ...state.players.map(p=>p.score), "", "", ""];
+  rows.push(totals);
+  const csv = rows.map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="gandengyan_scores_mobile_full.csv"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function clearHistory(){
+  if (!state.history.length) return;
+  if (!confirm("确定清空历史并回滚分数吗？")) return;
+  for (const h of state.history){ state.players.forEach((p,i)=> p.score -= (h.delta[i]||0)); }
+  state.history = []; renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
+  recomputePreview();
+}
+
+function zeroScores(){
+  if (!confirm("将所有玩家分数清零？")) return;
+  state.players.forEach(p=>p.score=0);
+  renderPlayers(); renderRanking(); save();
+}
+
+function resetNames(){
+  state.players.forEach((p,i)=> p.name="玩家"+(i+1));
+  renderPlayers(); renderRemainArea(); renderWinnerButtons(); save();
+}
+
+function applyPlayerCount(newN){
+  newN = Math.max(2, Math.min(12, Math.floor(newN)));
+  if (newN === N()) return;
+  if (!confirm("更改人数会清空历史记录并可能重置部分名字，确定吗？")) return;
+  for (const h of state.history){
+    for (let i=0;i<h.delta.length;i++){
+      if (i < state.players.length) state.players[i].score -= (h.delta[i]||0);
+    }
+  }
+  state.history = [];
+  if (newN > N()){
+    const start = N();
+    for (let i=start; i<newN; i++){ state.players.push({name:"玩家"+(i+1), score:0}); }
+  } else {
+    state.players.length = newN;
+  }
+  state.remainWinner = 0;
+  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
+  recomputePreview();
+}
+
+function init(){
+  load();
+  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory();
+  bindBombUI(); switchMode(); recomputePreview();
+
+  document.querySelector("#mode").addEventListener("change", switchMode);
+  document.querySelector("#commit_m").addEventListener("click", commitRound);
+  document.querySelector("#exportCsv_m").addEventListener("click", exportCsv);
+  document.querySelector("#clearHistory_m").addEventListener("click", clearHistory);
+
+  document.querySelector("#exportCsv").addEventListener("click", exportCsv);
+  document.querySelector("#clearHistory").addEventListener("click", clearHistory);
+  document.querySelector("#undo").addEventListener("click", undo);
+  document.querySelector("#zeroScores").addEventListener("click", zeroScores);
+  document.querySelector("#resetNames").addEventListener("click", resetNames);
+
+  document.querySelector("#minusP").addEventListener("click", ()=> applyPlayerCount(N()-1));
+  document.querySelector("#plusP").addEventListener("click", ()=> applyPlayerCount(N()+1));
+  document.querySelector("#applyP").addEventListener("click", ()=> {
+    const v = Number(document.querySelector("#setP").value||N());
+    applyPlayerCount(v);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
