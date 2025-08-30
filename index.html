@@ -1,157 +1,377 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>干瞪眼 记分板（手机版·全功能 + 春天）</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>干瞪眼 · 记分板 · Diamanté</title>
 <style>
-  :root { --bg:#0b1023; --panel:#101935; --ink:#e6eaf2; --muted:#9aa6c4; --line:rgba(154,166,196,.25); --accent:#22c55e; --warn:#ef4444; --info:#38bdf8;}
+  /* ================= Diamanté · 主题变量（中性/石墨） ================= */
+  :root{
+    /* 背景与面板（去蓝化） */
+    --bg:#0e1116;              /* 石墨黑 */
+    --bg2:#151a22;             /* 深石墨 */
+    --panel:#141b25e6;         /* 玻璃灰蓝，微透明 */
+    --ink:#f5f7fa;             /* 主文字（中性白） */
+    --muted:#c4cbd6;           /* 次文字 */
+    --line:rgba(206,212,224,.25); /* 精细分割线 */
+
+    /* 语义/点缀 */
+    --accent:#27c268;          /* 祖母绿（确认/入账） */
+    --accent-deep:#165a36;
+    --warn:#ef4444;            /* 警示红 */
+    --info:#58c7f3;            /* 信息蓝青（少量使用） */
+
+    --shadow:0 10px 28px rgba(0,0,0,.22);
+    --radius:16px;
+    --trans-fast:.18s cubic-bezier(.22,.61,.36,1);
+    --trans-slow:.35s cubic-bezier(.22,.61,.36,1);
+  }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--ink);background:#0b1023}
-  header{position:sticky;top:0;z-index:10;background:#0b1023;border-bottom:1px solid var(--line);padding:14px 16px}
-  h1{margin:0;font-size:18px}
-  main{padding:12px;display:grid;gap:12px}
-  .panel{background:#101935;border:1px solid var(--line);border-radius:14px;padding:12px}
-  .panel h2{margin:4px 0 10px;font-size:16px}
-  input,select,button{border-radius:12px;border:1px solid var(--line);background:#0b1220;color:var(--ink);padding:12px 14px;font-size:16px}
-  button{cursor:pointer;min-height:44px}
-  .btn{padding:12px 16px}
-  .btn.accent{background:#0f2b1b;border-color:#1b5e38;color:#caffdd}
-  .btn.warn{background:#3a1212;border-color:#6a1d1d;color:#ffd5d5}
-  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .pill{font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0b1220}
-  table{width:100%;border-collapse:collapse;font-size:16px}
-  th,td{border-bottom:1px dashed var(--line);padding:10px 6px;text-align:center}
-  th{text-align:center;color:#c7d2fe}
-  .num{width:88px;text-align:right}
-  .name{width:160px}
-  .muted{color:var(--muted);font-size:14px}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Inter,Helvetica,Arial;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 800px at 20% -10%, #1c243244, transparent),
+      radial-gradient(900px 700px at 110% 10%, #15212e33, transparent),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+  }
+
+  /* ================= 顶部栏 ================= */
+  header{
+    position:sticky; top:0; z-index:50;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(12px);
+    background:#111722cc;
+  }
+  .titleRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  h1{ margin:0; font-size:18px; letter-spacing:.3px }
+  .badgeMini{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 10px; border:1px solid var(--line);
+    border-radius:999px; background:#0f1520; font-size:12px;
+  }
   .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-  .winnerSelect{min-width:220px}
-  .tag{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#0b1220}
-  .chip{padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:#0b1220}
-  .chip.active{outline:3px solid var(--accent)}
-  .footerBar{position:sticky;bottom:0;background:#0b1023;border-top:1px solid var(--line);padding:10px;display:flex;gap:10px;z-index:10}
-  .footerBar .btn{flex:1}
-  .kv{display:flex;justify-content:space-between;gap:8px}
-  .kv .k{color:#9fb0ff}
-  .badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#0b1220;border:1px solid var(--line);font-size:12px}
-  .live{color:#caffdd}
-  .info{color:#9ee8ff}
-  .springTag{display:inline-block;padding:2px 6px;border:1px solid var(--line);border-radius:999px;background:#13233e;font-size:12px;color:#a7ffbf;margin-left:6px}
-  label.spring{display:inline-flex;align-items:center;gap:6px}
+
+  /* ================= 视口 + 横向滑动 ================= */
+  .viewport{
+    position:relative;
+    height:calc(100svh - 56px - 64px);
+  }
+  @supports not (height: 100svh){
+    .viewport{ height:calc(100vh - 56px - 64px); }
+  }
+  .pages{
+    height:100%;
+    display:flex;
+    transform:translate3d(0,0,0);
+    transition:transform var(--trans-slow);
+  }
+  .page{
+    flex:0 0 100%;
+    padding:12px 12px calc(72px + env(safe-area-inset-bottom));
+    overflow:auto; -webkit-overflow-scrolling:touch;
+  }
+
+  /* ================= 面板与通用元素 ================= */
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(206,212,224,.22);
+    border-radius:var(--radius);
+    padding:12px; box-shadow:var(--shadow);
+  }
+  .panel h2{margin:6px 0 10px; font-size:16px}
+  .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{font-size:14px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#101723}
+  input,select,button{
+    border-radius:12px; border:1px solid rgba(206,212,224,.22); background:#101723; color:var(--ink);
+    padding:12px 14px; font-size:16px
+  }
+  button{cursor:pointer; min-height:44px; transition:transform var(--trans-fast),box-shadow var(--trans-fast)}
+  button:active{transform:scale(.98)}
+  .btn{padding:12px 16px}
+  .btn.accent{background:#123422; border-color:#1f6b46; color:#defbe6}
+  .btn.warn{background:#3a1212; border-color:#6a1d1d; color:#ffd5d5}
+  .muted{color:var(--muted); font-size:14px}
+  table{width:100%; border-collapse:collapse; font-size:16px}
+  th,td{border-bottom:1px dashed var(--line); padding:10px 6px; text-align:center}
+  th{color:#e8edf6; font-weight:600}
+  .name{width:160px}
+  .num{width:90px; text-align:right}
+  input:focus,select:focus,button:focus{outline:2px solid #3b82f6; outline-offset:2px}
+
+  /* ================= 底部 Tab ================= */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    display:flex; justify-content:space-around; gap:4px;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+    background:#111722f2; backdrop-filter:blur(10px);
+  }
+  .tabbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:8px; border-radius:12px; border:1px solid transparent;
+    color:#e8eefb; font-size:12px; min-width:0;
+    transition:background var(--trans-fast), border-color var(--trans-fast), color var(--trans-fast);
+  }
+  .tabbtn .ico{font-size:18px; line-height:1}
+  .tabbtn.active{border-color:#445268; background:#0e1522; color:#ffffff}
+
+  /* ================= 记分：炸弹（红色炸弹主题） ================= */
+  .bombCard{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#3a0f14,#22090c); /* 绯红深浅 */
+    border:1px solid rgba(255,99,99,.35);
+    padding:16px 12px; text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 6px 20px rgba(120,20,20,.25);
+  }
+  .bombLabel{
+    font-size:13px; color:#ffd7d7; letter-spacing:.2px; display:flex; align-items:center; gap:6px;
+  }
+  .bombLabel::before{content:"💣";}
+  .bombValue{ font-weight:800; font-size:30px; letter-spacing:.6px; line-height:1.06; color:#fff3f3 }
+  .bombBtns .btn{min-width:56px}
+  .bombBtns input{background:#1b0c0f; border-color:rgba(255,99,99,.35)}
+  .bombPulse{animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{0%{transform:scale(.96)}100%{transform:scale(1)}}
+
+  /* ================= 记分：停靠小计条（仅记分页显示） ================= */
+  .subtotalDock{
+    position:fixed; left:10px; right:10px;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    z-index:59;
+    opacity:0; transform:translateY(8px);
+    pointer-events:none;
+    transition:opacity .25s cubic-bezier(.22,.61,.36,1), transform .25s cubic-bezier(.22,.61,.36,1);
+  }
+  .subtotalDock.show{ opacity:1; transform:translateY(0); }
+  .subtotalDock .dockInner{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:10px 12px; border:1px solid var(--line); border-radius:12px;
+    background:#0f1520f2; backdrop-filter:blur(8px); box-shadow:var(--shadow);
+  }
+
+  /* ================= 提示条（入账成功） ================= */
+  .toast{
+    position:fixed; left:50%; bottom:88px; transform:translateX(-50%) translateY(20px);
+    background:#0f2b1b; border:1px solid #1b5e38; color:#caffdd;
+    padding:10px 14px; border-radius:999px; box-shadow:var(--shadow);
+    opacity:0; pointer-events:none; transition:opacity var(--trans-slow), transform var(--trans-slow);
+    z-index:70;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* ================= 实时排名（清晰分层·卡片式） ================= */
+  .rankHeader{
+    text-align:center; margin:4px 0 10px 0;
+  }
+  .rankHeader h2{
+    margin:0; font-size:17px; letter-spacing:.4px;
+  }
+  .rankHeader .sub{
+    margin-top:4px; font-size:12px; color:var(--muted);
+  }
+  .rankList{ display:flex; flex-direction:column; gap:6px; }
+  .rankCard{
+    display:grid; grid-template-columns:56px 1fr 92px; gap:10px; align-items:center;
+    padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#0f1520aa;
+  }
+  .rankNo{
+    width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+    font-weight:800; font-size:16px; color:#0e1116; background:#e7eaf1;
+  }
+  .rankNo.gold{ background:linear-gradient(135deg,#ffd76a,#f4b400,#d9a400); color:#3a2a09 }
+  .rankNo.silver{ background:linear-gradient(135deg,#f0f3f8,#cfd6de,#b9c2cc); color:#2e3135 }
+  .rankNo.bronze{ background:linear-gradient(135deg,#f2c7a1,#d99159,#a56438); color:#2f1d0f }
+  .rankName{ font-size:16px }
+  .rankScore{ text-align:right; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:16px }
+  .rankCard.top .rankScore{ font-weight:800 }
+
+  /* 无障碍：减少动态时弱化动画 */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+  }
+  /* 强化排名分数显示 */
+.rankScore{
+  justify-self:end;
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:20px;               /* 更大 */
+  font-weight:800;              /* 更粗 */
+  padding:6px 10px;             /* 胶囊内边距 */
+  border-radius:12px;           /* 胶囊圆角 */
+  background:#0f1520;           /* 背景胶囊 */
+  border:1px solid var(--line); /* 细边框 */
+  letter-spacing:.2px;
+  display:inline-flex; align-items:baseline; gap:4px;
+}
+.rankScore .unit{ font-size:12px; opacity:.7 } /* “分”单位更小一点 */
+
+.rankCard.top .rankScore{
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+  background:linear-gradient(180deg,#101826,#0c121c); /* 前三名更沉稳一点 */
+}
+
+/* 按分值正负着色（显著） */
+.rankCard.pos .rankScore{ color:#16a34a }   /* 正分-绿色 */
+.rankCard.neg .rankScore{ color:#f87171 }   /* 负分-红色 */
+.rankCard.zero .rankScore{ color:#e5e7eb }  /* 0 分-中性 */
 </style>
 </head>
 <body>
-<header><h1>干瞪眼 · 记分板（手机版·全功能 + 春天）</h1></header>
-<main>
-  <section class="panel">
-    <h2>玩家与人数</h2>
-    <div class="flex">
-      <span class="pill">人数：<b id="playerCountEcho">7</b></span>
-      <button class="btn" id="minusP">－1</button>
-      <button class="btn" id="plusP">＋1</button>
+  <header>
+    <div class="titleRow">
+      <h1>干瞪眼 · 记分板</h1>
+      <span class="badgeMini">💣 <span class="mono" id="badgeMini">炸弹 0 ｜ 倍数 ×1</span></span>
     </div>
-    <div class="flex" style="margin-top:8px">
-      <label>设为：<input id="setP" class="num mono" value="7" style="width:90px"></label>
-      <button class="btn accent" id="applyP">应用人数</button>
-    </div>
-    <table style="margin-top:8px">
-      <thead><tr><th>#</th><th>玩家名</th><th>分</th></tr></thead>
-      <tbody id="playersBody"></tbody>
-    </table>
-    <div class="flex" style="margin-top:8px">
-      <button class="btn accent" id="resetNames">重置名字</button>
-      <button class="btn" id="zeroScores">分数清零</button>
-    </div>
-  </section>
+  </header>
 
-  <section class="panel">
-    <h2>模式 & 倍数</h2>
-    <div class="flex">
-      <label>模式
-        <select id="mode">
-          <option value="remain" selected>剩牌结算</option>
-          <option value="winner1">胜者 +1</option>
-          <option value="manual">手工输入</option>
-        </select>
-      </label>
-    </div>
-    <div class="tag" style="margin-top:10px">
-      <div class="flex">
-        <span class="pill">炸弹：</span>
-        <button class="btn" id="bombDec">-</button>
-        <input id="bombCount" class="num mono" value="0" inputmode="numeric" />
-        <button class="btn" id="bombInc">+</button>
-        <span class="pill">倍数：<b id="multEcho" class="mono">×1</b></span>
-        <button class="btn" id="bombReset">清零</button>
-      </div>
-      <div class="muted" style="margin-top:6px">k 个炸弹 → 本轮 <b>×2^k</b></div>
-    </div>
-  </section>
+  <!-- 视口 + 可滑动页面 -->
+  <div class="viewport">
+    <div class="pages" id="pages">
+      <!-- Page 0: 玩家 -->
+      <section class="page" data-page="players">
+        <div class="panel">
+          <h2>玩家设置</h2>
+          <div class="flex">
+            <span class="pill">人数：<b id="playerCountEcho">7</b></span>
+            <button class="btn" id="minusP">－1</button>
+            <button class="btn" id="plusP">＋1</button>
+          </div>
+          <div class="flex" style="margin-top:8px">
+            <label>设为：<input id="setP" class="mono num" value="7"></label>
+            <button class="btn accent" id="applyP">应用人数</button>
+          </div>
+          <table style="margin-top:8px">
+            <thead><tr><th>#</th><th>玩家名</th><th>分</th></tr></thead>
+            <tbody id="playersBody"></tbody>
+          </table>
+          <div class="flex" style="margin-top:8px">
+            <button class="btn accent" id="resetNames">重置名字</button>
+            <button class="btn" id="zeroScores">分数清零</button>
+          </div>
+        </div>
+      </section>
 
-  <section class="panel">
-    <h2>记一轮（实时预览）</h2>
-    <div id="modeRemain">
-      <div class="flex" style="gap:8px; flex-wrap:wrap">
-        <span class="pill">赢家：</span>
-        <select id="remainWinner" class="winnerSelect"></select>
-      </div>
-      <div class="flex" style="gap:8px; margin-top:8px; flex-wrap:wrap" id="winnerQuick"></div>
-      <table style="margin-top:8px">
-        <thead><tr><th>#</th><th>玩家</th><th>剩牌</th><th>春天</th></tr></thead>
-        <tbody id="remainBody"></tbody>
-      </table>
+      <!-- Page 1: 记分（炸弹红主题 + 春天下方按钮区） -->
+      <section class="page" data-page="score">
+        <div class="panel">
+          <!-- 炸弹模块（顶部中置，红主题） -->
+          <div class="bombCard" id="bombCard">
+            <div class="bombLabel">炸弹与倍数</div>
+            <div class="bombValue mono" id="bombValue">炸弹 0 ｜ 倍数 ×1</div>
+            <div class="bombBtns flex">
+              <button class="btn" id="bombDec">-</button>
+              <input id="bombCount" class="mono num" value="0" inputmode="numeric" />
+              <button class="btn" id="bombInc">+</button>
+              <button class="btn" id="bombReset">清零</button>
+            </div>
+          </div>
+
+          <!-- 模式/赢家选择 -->
+          <div class="flex" style="margin-top:12px">
+            <label>模式
+              <select id="mode">
+                <option value="remain" selected>剩牌结算</option>
+                <option value="winner1">胜者 +1</option>
+                <option value="manual">手工输入</option>
+              </select>
+            </label>
+            <span class="pill">赢家：</span>
+            <select id="remainWinner" class="winnerSelect" style="min-width:180px"></select>
+          </div>
+
+          <!-- 快捷赢家按钮 -->
+          <div class="flex" id="winnerQuick" style="margin-top:8px"></div>
+
+          <!-- 剩牌 / 春天 -->
+          <div id="modeRemain" style="margin-top:8px">
+            <table>
+              <thead><tr><th>#</th><th>玩家</th><th>剩牌</th><th>春天</th></tr></thead>
+              <tbody id="remainBody"></tbody>
+            </table>
+          </div>
+
+          <!-- 手工输入（与 winner1 保持） -->
+          <div id="modeWinner1" style="display:none; margin-top:8px">
+            <div class="muted">点选本轮胜者：</div>
+            <div id="winnerList" class="flex" style="gap:8px; flex-wrap:wrap; margin-top:6px"></div>
+          </div>
+          <div id="modeManual" style="display:none; margin-top:8px">
+            <table>
+              <thead><tr><th>#</th><th>玩家</th><th>分</th></tr></thead>
+              <tbody id="manualBody"></tbody>
+            </table>
+          </div>
+
+          <!-- 预览 + 入账（紧跟在春天区域下方，不“歪”） -->
+          <div class="panel" style="margin-top:10px">
+            <div class="flex" style="justify-content:space-between">
+              <span class="muted">本轮预览（含倍数/春天）</span>
+              <span class="pill">仅预览</span>
+            </div>
+            <div id="previewBox" class="mono" style="margin-top:6px; color:#fff5f5">—</div>
+            <div id="winnerPot" class="mono" style="margin-top:6px; color:#ffdede"></div>
+
+            <div class="flex" style="margin-top:10px; justify-content:flex-end">
+              <button class="btn" id="undo">撤销</button>
+              <button class="btn accent" id="commit_m">入账</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Page 2: 实时排名（卡片式，清晰分层） -->
+      <section class="page" data-page="rank">
+        <div class="panel">
+          <div class="rankHeader">
+            <h2>实时排名</h2>
+            <div class="sub" id="rankMeta">—</div>
+          </div>
+          <div class="rankList" id="rankList"></div>
+        </div>
+      </section>
+
+      <!-- Page 3: 历史 -->
+      <section class="page" data-page="history">
+        <div class="panel">
+          <h2>回合历史</h2>
+          <table>
+            <thead><tr><th>#</th><th>明细</th><th>操作</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+          <div class="flex" style="margin-top:8px">
+            <button class="btn warn" id="clearHistory">清空历史</button>
+            <button class="btn" id="exportCsv">导出 CSV</button>
+          </div>
+        </div>
+      </section>
     </div>
+  </div>
 
-    <div id="modeWinner1" style="display:none">
-      <div class="muted">点选本轮胜者：</div>
-      <div id="winnerList" class="flex" style="gap:8px; flex-wrap:wrap; margin-top:6px"></div>
+  <!-- 紧贴底部四个选项卡上方的小计条（仅记分页显示） -->
+  <div class="subtotalDock" id="subtotalDock" aria-live="polite">
+    <div class="dockInner">
+      <div>当前倍数：<b class="mono" id="dockMult">×1</b></div>
+      <div>赢家预计进账：<b class="mono" id="dockPot">+0</b></div>
     </div>
+  </div>
 
-    <div id="modeManual" style="display:none">
-      <table>
-        <thead><tr><th>#</th><th>玩家</th><th>分</th></tr></thead>
-        <tbody id="manualBody"></tbody>
-      </table>
-    </div>
+  <!-- 底部 Tab：玩家｜记分｜排名｜历史 -->
+  <nav class="tabbar">
+    <button class="tabbtn" data-tab="players"><div class="ico">👥</div>玩家</button>
+    <button class="tabbtn active" data-tab="score"><div class="ico">📝</div>记分</button>
+    <button class="tabbtn" data-tab="rank"><div class="ico">🏆</div>排名</button>
+    <button class="tabbtn" data-tab="history"><div class="ico">🗂️</div>历史</button>
+  </nav>
 
-    <div class="tag" style="margin-top:10px">
-      <div class="kv"><span class="k">本轮预览（含倍数/春天）</span><span class="badge">不入账，只预览</span></div>
-      <div id="previewBox" class="mono live" style="margin-top:6px">—</div>
-      <div id="winnerPot" class="mono info" style="margin-top:6px"></div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>实时排名</h2>
-    <table>
-      <thead><tr><th>名次</th><th>玩家</th><th>总分</th></tr></thead>
-      <tbody id="rankingBody"></tbody>
-    </table>
-  </section>
-
-  <section class="panel">
-    <h2>历史</h2>
-    <table>
-      <thead><tr><th>#</th><th>明细</th><th>操作</th></tr></thead>
-      <tbody id="historyBody"></tbody>
-    </table>
-    <div class="flex" style="margin-top:8px">
-      <button class="btn" id="undo">撤销上一回合</button>
-      <button class="btn warn" id="clearHistory">清空历史</button>
-      <button class="btn" id="exportCsv">导出 CSV</button>
-    </div>
-  </section>
-</main>
-
-<div class="footerBar">
-  <button class="btn" id="exportCsv_m">导出</button>
-  <button class="btn" id="clearHistory_m">清空</button>
-  <button class="btn accent" id="commit_m">入账</button>
-</div>
+  <!-- 入账成功提醒（非弹窗） -->
+  <div class="toast" id="toast">✅ 入账成功</div>
 
 <script>
+/* ================== 状态 ================== */
 const LS_KEY="gandengyan_scoreboard_mobile_full_v2_spring";
 let state = {
   players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
@@ -159,172 +379,170 @@ let state = {
   bombCount: 0,
   remainWinner: 0,
 };
+function N(){return state.players.length;}
+function save(){localStorage.setItem(LS_KEY, JSON.stringify(state));}
+function load(){const s=localStorage.getItem(LS_KEY); if(s){try{state=JSON.parse(s)}catch{}}}
+function mult(){return Math.pow(2, Math.max(0, +state.bombCount||0));}
 
-function N(){ return state.players.length; }
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function load(){ const s = localStorage.getItem(LS_KEY); if (s){ try{ state = JSON.parse(s); }catch(e){} } }
-function mult(){ return Math.pow(2, Math.max(0, +state.bombCount||0)); }
-function echoMult(){ document.querySelector("#multEcho").textContent = "×"+mult(); }
+/* ================== 视图切换（滑动） ================== */
+const pagesEl = document.getElementById('pages');
+const tabs = [...document.querySelectorAll('.tabbtn')];
+const pageIndex = { players:0, score:1, rank:2, history:3 };
+let current = 1; // 默认“记分”
+function go(tab){
+  const idx = pageIndex[tab] ?? 1;
+  current = idx;
+  pagesEl.style.transform = `translate3d(${-100*idx}%,0,0)`;
+  tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
 
+  // 只在“记分”页显示小计条
+  const dock = document.getElementById('subtotalDock');
+  if (dock) dock.classList.toggle('show', tab === 'score');
+
+  // 贴边到底部Tab
+  stickDockToTab();
+}
+tabs.forEach(b=> b.addEventListener('click', ()=> go(b.dataset.tab)));
+
+/* ================== 工具 ================== */
+function escapeHTML(s=''){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ================== 公共渲染 ================== */
+function updateBombUI(){
+  const m = mult();
+  const text = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+  const mini = document.getElementById('badgeMini');
+  const bombValue = document.getElementById('bombValue');
+  if(mini) mini.textContent = text;
+  if(bombValue) bombValue.textContent = text;
+
+  const dockMult = document.getElementById('dockMult');
+  if(dockMult) dockMult.textContent = '×'+m;
+}
+function pulseBomb(){
+  const card = document.getElementById('bombCard');
+  if(!card) return;
+  card.classList.remove('bombPulse'); void card.offsetWidth; card.classList.add('bombPulse');
+}
+
+/* ================== 玩家 ================== */
 function renderPlayers(){
-  document.querySelector("#playerCountEcho").textContent = String(N());
-  document.querySelector("#setP").value = String(N());
-  const tb = document.querySelector("#playersBody"); tb.innerHTML="";
+  document.getElementById('playerCountEcho').textContent = String(N());
+  document.getElementById('setP').value = String(N());
+  const tb = document.getElementById('playersBody'); tb.innerHTML="";
   state.players.forEach((p,idx)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${p.name}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll("input.name").forEach(inp=>{
-    inp.addEventListener("input", e=>{
+  tb.querySelectorAll('input.name').forEach(inp=>{
+    inp.addEventListener('input', e=>{
       const i = +e.target.dataset.idx;
-      state.players[i].name = e.target.value || ("玩家"+(i+1));
-      save(); renderRemainArea(); renderWinnerButtons(); renderRanking(); recomputePreview();
+      state.players[i].name = e.target.value || ('玩家'+(i+1));
+      save(); renderRemainArea(); renderQuickWinner(); renderRank(); recomputePreview();
     });
   });
-  renderRanking();
+  renderRank();
 }
 
-function renderWinnerButtons(){
-  const q = document.querySelector("#winnerQuick"); q.innerHTML="";
+/* ================== 记分页：赢家按钮/输入 ================== */
+function renderQuickWinner(){
+  const q = document.getElementById('winnerQuick'); q.innerHTML="";
   state.players.forEach((p,i)=>{
-    const b = document.createElement("button");
-    b.className = "chip" + (i===state.remainWinner? " active": "");
+    const b = document.createElement('button');
+    b.className = 'btn' + (i===state.remainWinner?' accent':'');
     b.textContent = p.name;
-    b.addEventListener("click", ()=>{ state.remainWinner = i; save(); renderRemainArea(); renderWinnerButtons(); recomputePreview(); });
+    b.addEventListener('click', ()=>{ state.remainWinner=i; save(); renderRemainArea(); renderQuickWinner(); recomputePreview(); });
     q.appendChild(b);
   });
-  const w = document.querySelector("#winnerList"); w.innerHTML="";
-  state.players.forEach((p,i)=>{
-    const btn = document.createElement("button"); btn.className="btn"; btn.textContent=p.name;
-    btn.addEventListener("click", ()=>{
-      w.dataset.selected = i;
-      [...w.querySelectorAll(".btn")].forEach(x=>x.style.outline="none");
-      btn.style.outline="3px solid var(--accent)";
-      recomputePreview();
-    });
-    w.appendChild(btn);
-  });
 }
-
 function renderRemainArea(){
-  const sel = document.querySelector("#remainWinner"); sel.innerHTML="";
+  const sel = document.getElementById('remainWinner'); sel.innerHTML="";
   state.players.forEach((p,i)=>{
-    const opt = document.createElement("option"); opt.value=i; opt.textContent=p.name; sel.appendChild(opt);
+    const o=document.createElement('option'); o.value=i; o.textContent=p.name; sel.appendChild(o);
   });
-  if (state.remainWinner >= N()) state.remainWinner = 0;
+  if (state.remainWinner>=N()) state.remainWinner=0;
   sel.value = String(state.remainWinner);
-  sel.onchange = ()=>{ state.remainWinner = +sel.value; save(); renderRemainArea(); renderWinnerButtons(); recomputePreview(); };
+  sel.onchange = ()=>{ state.remainWinner=+sel.value; save(); renderRemainArea(); renderQuickWinner(); recomputePreview(); };
 
-  const rb = document.querySelector("#remainBody"); rb.innerHTML="";
+  const rb = document.getElementById('remainBody'); rb.innerHTML="";
   state.players.forEach((p,i)=>{
-    const isWinner = (i===state.remainWinner);
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td>
+    const isW = (i===state.remainWinner);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
       <td><input type="number" min="0" step="1" inputmode="numeric"
-          class="num mono remainInp" data-idx="${i}" ${isWinner?"disabled":""}
-          placeholder="${isWinner?"赢家=0":"剩牌数"}"></td>
-      <td>
-        <label class="spring">
-          <input type="checkbox" class="springChk" data-idx="${i}" ${isWinner?"disabled":""}>
-          春天
-        </label>
-      </td>`;
+          class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
+          placeholder="${isW?'赢家=0':'剩牌数'}"></td>
+      <td><label class="flex" style="gap:6px">
+        <input type="checkbox" class="springChk" data-idx="${i}" ${isW?'disabled':''}> 春天
+      </label></td>`;
     rb.appendChild(tr);
   });
-  rb.querySelectorAll(".remainInp").forEach(inp=> inp.addEventListener("input", recomputePreview));
-  rb.querySelectorAll(".springChk").forEach(chk=> chk.addEventListener("change", recomputePreview));
+  rb.querySelectorAll('.remainInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
+  rb.querySelectorAll('.springChk').forEach(chk=> chk.addEventListener('change', recomputePreview));
 
-  const mb = document.querySelector("#manualBody"); mb.innerHTML="";
+  const mb = document.getElementById('manualBody'); mb.innerHTML="";
   state.players.forEach((p,i)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
     mb.appendChild(tr);
   });
-  mb.querySelectorAll(".manualInp").forEach(inp=> inp.addEventListener("input", recomputePreview));
+  mb.querySelectorAll('.manualInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
 }
 
-function renderRanking(){
-  const rb = document.querySelector("#rankingBody"); rb.innerHTML="";
-  const arr = state.players.map((p,i)=>({i, name:p.name, score:p.score}));
-  arr.sort((a,b)=> b.score - a.score || a.i - b.i);
-  arr.forEach((r,idx)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td class="mono">${r.score}</td>`;
-    rb.appendChild(tr);
-  });
-}
-
+/* ================== 记分计算/预览/入账 ================== */
 function switchMode(){
-  const mode = document.querySelector("#mode").value;
-  document.querySelector("#modeRemain").style.display = (mode==="remain")?"block":"none";
-  document.querySelector("#modeWinner1").style.display = (mode==="winner1")?"block":"none";
-  document.querySelector("#modeManual").style.display = (mode==="manual")?"block":"none";
+  const mode = document.getElementById('mode').value;
+  document.getElementById('modeRemain').style.display = (mode==='remain')?'block':'none';
+  document.getElementById('modeWinner1').style.display = (mode==='winner1')?'block':'none';
+  document.getElementById('modeManual').style.display = (mode==='manual')?'block':'none';
   recomputePreview();
 }
 
-function applyRound(delta, desc){
-  const m = mult();
-  state.players.forEach((p,i)=> p.score += (delta[i]||0));
-  state.history.push({desc, delta, bombs: state.bombCount, mult: m});
-  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory();
-  save();
-}
-
 function computeRound(){
-  const mode = document.querySelector("#mode").value;
-  const n = N();
-  const m = mult();
-  if (mode==="remain"){
-    const winnerIdx = state.remainWinner;
-    const inputs = [...document.querySelectorAll(".remainInp")];
-    const springs = [...document.querySelectorAll(".springChk")];
-    const remain = Array(n).fill(0);
-    const springMark = Array(n).fill(false);
+  const mode = document.getElementById('mode').value;
+  const n = N(), m = mult();
+  if (mode==='remain'){
+    const w = state.remainWinner;
+    const inputs = [...document.querySelectorAll('.remainInp')];
+    const springs = [...document.querySelectorAll('.springChk')];
+    const remain = Array(n).fill(0), springMark = Array(n).fill(false);
 
     for (const inp of inputs){
-      const i = +inp.dataset.idx;
-      const raw = inp.value.trim();
-      const v = raw==="" ? 0 : Number(raw);
-      if (i===winnerIdx) remain[i] = 0;
-      else {
-        if (!Number.isFinite(v) || v<0 || Math.floor(v)!==v) return {error:"剩牌必须是非负整数"};
-        remain[i] = v;
+      const i=+inp.dataset.idx; const raw=inp.value.trim();
+      const v = raw===""?0:Number(raw);
+      if (i===w) remain[i]=0;
+      else{
+        if(!Number.isFinite(v) || v<0 || Math.floor(v)!==v) return {error:"剩牌必须是非负整数"};
+        remain[i]=v;
       }
     }
-    for (const chk of springs){
-      const i = +chk.dataset.idx;
-      springMark[i] = !!chk.checked && i!==winnerIdx; // 赢家无效
-    }
+    for(const chk of springs){ const i=+chk.dataset.idx; springMark[i]=!!chk.checked && i!==w; }
 
-    const delta = Array(n).fill(0);
-    let pot = 0;
-    for (let i=0;i<n;i++){
-      if (i===winnerIdx) continue;
-      const springMul = springMark[i] ? 2 : 1;
-      const loss = - remain[i]*m*springMul;
-      delta[i] = loss;
-      pot += -loss;
+    const delta = Array(n).fill(0); let pot=0;
+    for(let i=0;i<n;i++){
+      if(i===w) continue;
+      const mul = springMark[i]?2:1;
+      const loss = - remain[i]*m*mul;
+      delta[i]=loss; pot += -loss;
     }
-    delta[winnerIdx] = pot;
-    const remDesc = remain.map((v,i)=> `${state.players[i].name}:${v}${springMark[i]?'(春)':''}`).join("， ");
-    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[winnerIdx].name} ｜ 剩牌：[${remDesc}] ×${m}`, springs: springMark};
-  } else if (mode==="winner1"){
-    const sel = document.querySelector("#winnerList").dataset.selected;
-    if (sel===undefined) return {error:"请选择胜者"};
-    const idx = +sel;
-    const delta = Array(n).fill(0); delta[idx] = 1*m;
+    delta[w]=pot;
+    const remDesc = remain.map((v,i)=>`${state.players[i].name}:${v}${springMark[i]?'(春)':''}`).join('， ');
+    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[w].name} ｜ 剩牌：[${remDesc}] ×${m}`, springs:springMark};
+  }else if(mode==='winner1'){
+    const sel = document.getElementById('winnerList').dataset.selected;
+    if(sel===undefined) return {error:"请选择胜者"};
+    const idx=+sel, delta=Array(n).fill(0); delta[idx]=1*m;
     return {delta, desc:`胜者：${state.players[idx].name}（+1×${m}）`};
-  } else {
-    // manual
-    const inputs = [...document.querySelectorAll(".manualInp")];
+  }else{
+    const inputs = [...document.querySelectorAll('.manualInp')];
     const delta = Array(n).fill(0);
-    for (const inp of inputs){
-      const i = +inp.dataset.idx;
-      const raw = inp.value.trim();
-      const v = raw==="" ? 0 : Number(raw);
-      if (!Number.isFinite(v)) return {error:"请输入数字"};
-      delta[i] = v*m;
+    for(const inp of inputs){
+      const i=+inp.dataset.idx; const raw=inp.value.trim(); const v=raw===""?0:Number(raw);
+      if(!Number.isFinite(v)) return {error:"请输入数字"};
+      delta[i]=v*m;
     }
     return {delta, desc:`手工输入 ×${m}`};
   }
@@ -332,158 +550,206 @@ function computeRound(){
 
 function recomputePreview(){
   const res = computeRound();
-  const box = document.querySelector("#previewBox");
-  const pot = document.querySelector("#winnerPot");
-  if (res.error){
-    box.textContent = "— " + res.error;
-    pot.textContent = "";
+  const box = document.getElementById('previewBox');
+  const pot = document.getElementById('winnerPot');
+  const dockPot = document.getElementById('dockPot');
+  if(res?.error){
+    box.textContent='— '+res.error;
+    pot.textContent='';
+    if(dockPot) dockPot.textContent='+0';
     return;
   }
-  const signs = res.delta.map((v,i)=> `${state.players[i].name}:${v>=0?'+':''}${v}`);
-  box.textContent = signs.join("， ");
-  if (document.querySelector("#mode").value==="remain"){
+  const signs = res.delta.map((v,i)=>`${state.players[i].name}:${v>=0?'+':''}${v}`);
+  box.textContent = signs.join('， ');
+  if (document.getElementById('mode').value==='remain'){
     const w = state.remainWinner;
     pot.textContent = `赢家（${state.players[w].name}）本轮预计：+${res.delta[w]}`;
-  } else pot.textContent = "";
+    if(dockPot) dockPot.textContent = `+${res.delta[w]}`;
+  }else{
+    pot.textContent='';
+    if(dockPot) dockPot.textContent = '+0';
+  }
+}
+
+function applyRound(delta, desc){
+  const m = mult();
+  state.players.forEach((p,i)=> p.score += (delta[i]||0));
+  state.history.push({desc, delta, bombs: state.bombCount, mult: m});
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory();
+  save();
 }
 
 function commitRound(){
   const res = computeRound();
-  if (res.error){ alert(res.error); return; }
-  // 将春天信息附加到描述（如果存在）
-  if (res.springs){
+  if(res.error){ alert(res.error); return; }
+  if(res.springs){
     const list = res.springs.map((v,i)=> v?state.players[i].name:null).filter(Boolean);
     if (list.length) res.desc += ` ｜ 春天：${list.join('、')}`;
   }
   applyRound(res.delta, res.desc);
-  document.querySelectorAll(".remainInp").forEach(inp=>{ if (!inp.disabled) inp.value=""; });
-  document.querySelectorAll(".springChk").forEach(chk=>{ if (!chk.disabled) chk.checked=false; });
-  document.querySelectorAll(".manualInp").forEach(inp=> inp.value="");
-  document.querySelector("#winnerList").dataset.selected="";
+  document.querySelectorAll('.remainInp').forEach(inp=>{ if(!inp.disabled) inp.value=""; });
+  document.querySelectorAll('.springChk').forEach(chk=>{ if(!chk.disabled) chk.checked=false; });
+  document.querySelectorAll('.manualInp').forEach(inp=> inp.value="");
+  const wl=document.getElementById('winnerList'); if(wl) wl.dataset.selected="";
   recomputePreview();
+  showToast('✅ 入账成功');
 }
 
+/* ================== 历史 ================== */
 function renderHistory(){
-  const tb = document.querySelector("#historyBody"); tb.innerHTML="";
+  const tb = document.getElementById('historyBody'); tb.innerHTML="";
   state.history.forEach((h,ri)=>{
-    const tr = document.createElement("tr");
-    const detail = h.delta.map((v,i)=> `${state.players[i]?.name||("玩家"+(i+1))}:${v>=0?'+':''}${v}`).join("， ");
+    const tr = document.createElement('tr');
+    const detail = h.delta.map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`).join('， ');
     tr.innerHTML = `<td>${ri+1}</td>
       <td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
       <td><button class="btn" data-del="${ri}">删除</button></td>`;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll("button[data-del]").forEach(b=> b.addEventListener("click", ()=>deleteRound(+b.dataset.del)));
+  tb.querySelectorAll('button[data-del]').forEach(b=> b.addEventListener('click', ()=>deleteRound(+b.dataset.del)));
 }
-
 function deleteRound(idx){
-  const h = state.history[idx];
-  if (!h) return;
+  const h=state.history[idx]; if(!h) return;
   state.players.forEach((p,i)=> p.score -= (h.delta[i]||0));
   state.history.splice(idx,1);
-  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save();
   recomputePreview();
 }
-
-function undo(){
-  if (!state.history.length) return;
-  deleteRound(state.history.length-1);
+function clearHistory(){
+  if(!state.history.length) return;
+  if(!confirm('确定清空历史并回滚分数吗？')) return;
+  for(const h of state.history){ state.players.forEach((p,i)=> p.score -= (h.delta[i]||0)); }
+  state.history=[]; renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save();
+  recomputePreview();
 }
-
-function bindBombUI(){
-  const bc = document.querySelector("#bombCount");
-  const dec = document.querySelector("#bombDec");
-  const inc = document.querySelector("#bombInc");
-  const rst = document.querySelector("#bombReset");
-  bc.value = state.bombCount||0;
-  echoMult();
-  function sync(v){
-    const k = Math.max(0, Math.floor(Number(v)||0));
-    state.bombCount = k; bc.value = k; echoMult(); save(); recomputePreview();
-  }
-  bc.addEventListener("input", ()=> sync(bc.value));
-  dec.addEventListener("click", ()=> sync((+bc.value||0)-1));
-  inc.addEventListener("click", ()=> sync((+bc.value||0)+1));
-  rst.addEventListener("click", ()=> sync(0));
-}
-
 function exportCsv(){
   const header = ["Round", ...state.players.map(p=>p.name), "Bombs", "Multiplier", "Desc"];
-  const rows = [header];
-  state.history.forEach((h,ri)=>{ rows.push([ri+1, ...state.players.map((_,i)=> h.delta[i]||0), h.bombs, h.mult, h.desc]); });
-  const totals = ["TOTAL", ...state.players.map(p=>p.score), "", "", ""];
-  rows.push(totals);
+  const rows=[header];
+  state.history.forEach((h,ri)=> rows.push([ri+1, ...state.players.map((_,i)=> h.delta[i]||0), h.bombs, h.mult, h.desc]));
+  rows.push(["TOTAL", ...state.players.map(p=>p.score), "", "", ""]);
   const csv = rows.map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download="gandengyan_scores_mobile_full_spring.csv"; a.click();
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"}); const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='gandengyan_scores_mobile_full_spring.csv'; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-function clearHistory(){
-  if (!state.history.length) return;
-  if (!confirm("确定清空历史并回滚分数吗？")) return;
-  for (const h of state.history){ state.players.forEach((p,i)=> p.score -= (h.delta[i]||0)); }
-  state.history = []; renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
-  recomputePreview();
-}
+/* ================== 实时排名（卡片式） ================== */
+function renderRank(){
+  const box = document.getElementById('rankList'); box.innerHTML="";
+  const meta = document.getElementById('rankMeta');
+  const arr = state.players.map((p,i)=>({i, name:p.name, score:p.score}));
+  arr.sort((a,b)=> b.score - a.score || a.i - b.i);
 
-function zeroScores(){
-  if (!confirm("将所有玩家分数清零？")) return;
-  state.players.forEach(p=>p.score=0);
-  renderPlayers(); renderRanking(); save();
-}
-
-function resetNames(){
-  state.players.forEach((p,i)=> p.name="玩家"+(i+1));
-  renderPlayers(); renderRemainArea(); renderWinnerButtons(); save();
-}
-
-function applyPlayerCount(newN){
-  newN = Math.max(2, Math.min(12, Math.floor(newN)));
-  if (newN === N()) return;
-  if (!confirm("更改人数会清空历史记录并可能重置部分名字，确定吗？")) return;
-  for (const h of state.history){
-    for (let i=0;i<h.delta.length;i++){
-      if (i < state.players.length) state.players[i].score -= (h.delta[i]||0);
-    }
+  if(meta){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    meta.textContent = `共 ${arr.length} 人 ｜ 更新于 ${hh}:${mm}`;
   }
-  state.history = [];
-  if (newN > N()){
-    const start = N();
-    for (let i=start; i<newN; i++){ state.players.push({name:"玩家"+(i+1), score:0}); }
-  } else {
-    state.players.length = newN;
-  }
-  state.remainWinner = 0;
-  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory(); save();
-  recomputePreview();
-}
 
-function init(){
-  load();
-  renderPlayers(); renderRemainArea(); renderWinnerButtons(); renderRanking(); renderHistory();
-  bindBombUI(); switchMode(); recomputePreview();
+  const nf = new Intl.NumberFormat('zh-CN'); // 千分位
+  arr.forEach((r,idx)=>{
+    const card = document.createElement('div');
+    const medalClass = idx===0?'gold':idx===1?'silver':idx===2?'bronze':'';
+    // 根据分数决定显著色
+    let pv = 'zero';
+    if (r.score > 0) pv = 'pos';
+    else if (r.score < 0) pv = 'neg';
 
-  document.querySelector("#mode").addEventListener("change", switchMode);
-  document.querySelector("#commit_m").addEventListener("click", commitRound);
-  document.querySelector("#exportCsv_m").addEventListener("click", exportCsv);
-  document.querySelector("#clearHistory_m").addEventListener("click", clearHistory);
-
-  document.querySelector("#exportCsv").addEventListener("click", exportCsv);
-  document.querySelector("#clearHistory").addEventListener("click", clearHistory);
-  document.querySelector("#undo").addEventListener("click", undo);
-  document.querySelector("#zeroScores").addEventListener("click", zeroScores);
-  document.querySelector("#resetNames").addEventListener("click", resetNames);
-
-  document.querySelector("#minusP").addEventListener("click", ()=> applyPlayerCount(N()-1));
-  document.querySelector("#plusP").addEventListener("click", ()=> applyPlayerCount(N()+1));
-  document.querySelector("#applyP").addEventListener("click", ()=> {
-    const v = Number(document.querySelector("#setP").value||N());
-    applyPlayerCount(v);
+    card.className = `rankCard ${idx<3?'top':''} ${pv}`;
+    card.innerHTML = `
+      <div class="rankNo ${medalClass}">${idx+1}</div>
+      <div class="rankName">${escapeHTML(r.name)}</div>
+      <div class="rankScore mono">${r.score>=0?'+':''}${nf.format(r.score)}<span class="unit">分</span></div>
+    `;
+    box.appendChild(card);
   });
 }
 
+/* ================== 炸弹交互 ================== */
+function bindBombUI(){
+  const bc = document.getElementById('bombCount');
+  const dec = document.getElementById('bombDec');
+  const inc = document.getElementById('bombInc');
+  const rst = document.getElementById('bombReset');
+  bc.value = state.bombCount||0;
+  updateBombUI();
+
+  function sync(v){
+    const k = Math.max(0, Math.floor(Number(v)||0));
+    if (k !== state.bombCount){ pulseBomb(); }
+    state.bombCount = k; bc.value = k;
+    updateBombUI(); save(); recomputePreview();
+  }
+  bc.addEventListener('input', ()=> sync(bc.value));
+  dec.addEventListener('click', ()=> sync((+bc.value||0)-1));
+  inc.addEventListener('click', ()=> sync((+bc.value||0)+1));
+  rst.addEventListener('click', ()=> sync(0));
+}
+
+/* ================== 其它操作 ================== */
+function zeroScores(){ if(!confirm("将所有玩家分数清零？")) return; state.players.forEach(p=>p.score=0); renderPlayers(); renderRank(); save(); }
+function resetNames(){ state.players.forEach((p,i)=> p.name="玩家"+(i+1)); renderPlayers(); renderRemainArea(); renderQuickWinner(); save(); }
+function applyPlayerCount(newN){
+  newN = Math.max(2, Math.min(12, Math.floor(newN)));
+  if (newN===N()) return;
+  if (!confirm("更改人数会清空历史记录并可能重置部分名字，确定吗？")) return;
+  for(const h of state.history){
+    for(let i=0;i<h.delta.length;i++){
+      if(i<state.players.length) state.players[i].score -= (h.delta[i]||0);
+    }
+  }
+  state.history=[];
+  if (newN>N()){
+    const start=N();
+    for(let i=start;i<newN;i++) state.players.push({name:"玩家"+(i+1), score:0});
+  }else{
+    state.players.length=newN;
+  }
+  state.remainWinner=0;
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save(); recomputePreview();
+}
+function undo(){ if(!state.history.length) return; deleteRound(state.history.length-1); }
+
+/* ================== Toast ================== */
+let toastTimer=null;
+function showToast(text){
+  const t=document.getElementById('toast');
+  t.textContent=text; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=> t.classList.remove('show'), 1500);
+}
+
+/* ================== Dock 紧贴Tab ================== */
+function stickDockToTab(){
+  const tab = document.querySelector('.tabbar');
+  const dock = document.getElementById('subtotalDock');
+  if(!tab || !dock) return;
+  const h = tab.getBoundingClientRect().height || 64;
+  dock.style.bottom = `calc(${h}px + env(safe-area-inset-bottom))`;
+}
+window.addEventListener('resize', stickDockToTab);
+
+/* ================== 初始化 ================== */
+function init(){
+  load();
+  go('score'); // 默认停留在“记分”
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory();
+  bindBombUI(); switchMode(); updateBombUI(); recomputePreview();
+  stickDockToTab();
+
+  // 交互绑定
+  document.getElementById('mode').addEventListener('change', switchMode);
+  document.getElementById('commit_m').addEventListener('click', commitRound);
+  document.getElementById('undo').addEventListener('click', undo);
+  document.getElementById('exportCsv').addEventListener('click', exportCsv);
+  document.getElementById('clearHistory').addEventListener('click', clearHistory);
+  document.getElementById('minusP').addEventListener('click', ()=> applyPlayerCount(N()-1));
+  document.getElementById('plusP').addEventListener('click', ()=> applyPlayerCount(N()+1));
+  document.getElementById('applyP').addEventListener('click', ()=> applyPlayerCount(Number(document.getElementById('setP').value||N())));
+  document.getElementById('zeroScores').addEventListener('click', zeroScores);
+  document.getElementById('resetNames').addEventListener('click', resetNames);
+}
 init();
 </script>
 </body>
