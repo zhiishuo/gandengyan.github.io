@@ -1,4 +1,4 @@
-const CACHE = 'gandengyan-diamante-v1';
+const CACHE = 'gandengyan-diamante-v2';
 const ASSETS = [
   './',
   './index.html',
