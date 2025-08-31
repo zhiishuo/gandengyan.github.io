@@ -45,11 +45,11 @@ h1{ margin:0; font-size:18px; letter-spacing:.3px }
 /* ===== 视口 + 容器（仅点击切换，无横向手势） ===== */
 .viewport{
   position:relative;
-  height:calc(100svh - 56px - 64px);
+  height:calc(100svh - 64px);
   overflow:hidden; /* 关键：不允许水平滚动 */
 }
 @supports not (height: 100svh){
-  .viewport{ height:calc(100vh - 56px - 64px); }
+  .viewport{ height:calc(100vh - 64px); }
 }
 .pages{
   height:100%; display:flex;
@@ -60,7 +60,7 @@ h1{ margin:0; font-size:18px; letter-spacing:.3px }
 }
 .page{
   flex:0 0 100%;
-  padding:12px 12px calc(72px + env(safe-area-inset-bottom));
+  padding:16px 12px calc(72px + env(safe-area-inset-bottom));
   overflow:auto; -webkit-overflow-scrolling:touch;
 }
 
