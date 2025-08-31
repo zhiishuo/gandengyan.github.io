@@ -459,14 +459,14 @@ th{color:#e8edf6; font-weight:600}
 
 /* 表格赢家行：绿色描边 + 淡绿底；禁用输入依旧清晰 */
 .winnerRow{
-  background: rgba(41,208,118,.08);
+  background: rgba(228, 39, 47, 0.08);
 }
 .winnerRow td{
   border-bottom-color: rgba(41,208,118,.28);
-  box-shadow: inset 3px 0 0 rgba(41,208,118,.55); /* 左侧竖线更直观 */
+  box-shadow: inset 3px 0 0 rgba(26, 39, 32, 0.55); /* 左侧竖线更直观 */
 }
 .winnerRow .remainInp:disabled{
-  opacity: .95; color: #fff; border-color: rgba(41,208,118,.55);
+  opacity: .95; color: #635e5e; border-color: rgb(43, 45, 48);
 }
 
 /* 赢家之后的行：轻微加深底色区分（不抢眼） */
