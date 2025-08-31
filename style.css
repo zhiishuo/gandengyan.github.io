@@ -153,7 +153,7 @@ th{color:#e8edf6; font-weight:600}
 .bombLabel::before{content:"💣";}
 .bombValue{ font-weight:800; font-size:30px; letter-spacing:.4px; color:#fff2f2 }
 .bombBtns .btn{
-  min-width:128px; min-height:62px; font-size:24px; font-weight:800; border-radius:14px;
+  min-width:88px; min-height:62px; font-size:22px; font-weight:00; border-radius:18px;
 }
 #bombDec, #bombInc{ background:#2b0f12; border-color:#7a2d2d; color:#ffe2e2 }
 #bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede }
