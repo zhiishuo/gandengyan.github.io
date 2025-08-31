@@ -496,3 +496,60 @@ th{color:#e8edf6; font-weight:600}
 /* 未选中更克制，选中更明亮（继承你已有的 .tabbtn/.active 颜色）*/
 .tabbtn { color: #cfd7e6; }            /* 如果你已有，就不必重复 */
 .tabbtn.active { color: #ffffff; }     /* 选中态自动让图标更亮 */
+
+/* ====== Bottom Tabs: 微信式选中（仅换主题色），更“窄”，图标略大 ====== */
+
+/* 让底栏看起来更“窄”：减小左右内边距与按钮内边距（不改全局高度变量） */
+.tabbar{
+  padding: 0 6px !important;    /* 原 8~10，更贴边一些 */
+  gap: 0 !important;
+}
+
+/* 扁平按钮：未选中中性灰；选中只变主题色，不变背景/外框 */
+.tabbtn{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #cfd7e6 !important;    /* 未选中 */
+  padding: 6px 2px !important;  /* 原 8~10，整体更“薄” */
+  font-size: 11px !important;   /* 字号保持克制 */
+  transition: color .18s ease, transform .12s ease !important;
+}
+
+/* 去掉顶部那条选中指示线（若之前存在） */
+.tabbtn::before{ display:none !important; }
+
+/* 选中：仅图标+文字使用主题色；不要背景块或描边 */
+.tabbtn.active{
+  color: var(--accent) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 图标稍微大一点，视觉中心更靠下，显得更“薄” */
+.tabbtn .ico{
+  width: 30px !important;
+  height: 30px !important;      /* 原 26/28/36 之一，统一到 30 */
+  line-height: 1 !important;
+  filter: none !important;      /* 选中更干净 */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 若使用内联 SVG，跟随 currentColor 着色 */
+.tabbtn .ico svg{
+  width: 100% !important;
+  height: 100% !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* 轻触感（可留可去） */
+@media (hover:hover){
+  .tabbtn:hover{ background: transparent !important; }
+}
+.tabbtn:active{ transform: translateY(1px) scale(.99); }
