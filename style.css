@@ -1,35 +1,34 @@
 /* ================= Diamanté · 主题变量（中性/石墨） ================= */
 :root{
   /* Chrome 区（顶部/底部栏、浮动条等框架层） */
-  --chrome-bg: #0f1420;
-  --chrome-bg-blur: #0f1420f2;
-  --chrome-line: rgba(55,55,66,.22);
+  --chrome-bg: #0e141f;
+  --chrome-bg-blur: rgba(14, 20, 31, 0.95);
+  --chrome-line: rgba(247, 248, 255, 0.2);
 
   /* Content 区（中间页面背景 + 面板） */
-  --content-bg1: rgba(23,23,23,.37);
-  --content-bg2: #101725;
-  --panel: rgba(40,45,55,.90);
-  --line: rgba(171,175,193,.22);
+  --content-bg1: rgba(20,23,29,.42);
+  --content-bg2: #0f1624;
+  --panel: rgba(32,37,48,.92);
+  --line: rgba(180,186,206,.20);
 
   /* 文本与状态色 */
   --ink:#f6f8fb; --muted:#c5ceda;
-  --accent:#27c268; --warn:#ef4444; --info:#58c7f3;
+  --accent:#29d076; --warn:#ef4444; --info:#58c7f3;
 
-  --shadow: 0 10px 28px rgba(0,0,0,.22);
-  --radius: 16px;
+  --shadow: 0 12px 30px rgba(0,0,0,.24);
+  --radius: 18px;
   --trans-fast:.18s cubic-bezier(.22,.61,.36,1);
   --trans-slow:.35s cubic-bezier(.22,.61,.36,1);
 
   /* 底部尺寸变量（统一管理） */
-  --tabbar-h: 70px;
-  --tabbar-offset: 6px;
+  --tabbar-h: 88px;
+  --tabbar-offset: 24px;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
-html,body { touch-action: manipulation; } /* iOS 双击缩放保险 */
+html,body { touch-action: manipulation; }
 
-/* 根背景铺满，避免顶部状态栏露白 */
 html{
   background:
     radial-gradient(1100px 700px at 15% -10%, #10213840 0%, transparent 60%),
@@ -44,7 +43,7 @@ body{
   background:none;
 }
 
-/* ========== 顶部栏（含安全区） ========== */
+/* ========== 顶部栏 ========== */
 header{
   position:sticky; top:0; z-index:50;
   padding: calc(10px + env(safe-area-inset-top)) 14px 12px;
@@ -61,17 +60,11 @@ h1{ margin:0; font-size:18px; letter-spacing:.3px }
 }
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
-/* ========== 视口容器（仅点击切换，无横向手势） ========== */
+/* ========== 视口容器 ========== */
 .viewport{
   position:relative;
   height:calc(100dvh - var(--tabbar-h) - var(--tabbar-offset));
   overflow:hidden;
-}
-@supports not (height: 100dvh){
-  .viewport{ height:calc(100svh - var(--tabbar-h) - var(--tabbar-offset)); }
-}
-@supports not (height: 100svh){
-  .viewport{ height:calc(100vh - var(--tabbar-h) - var(--tabbar-offset)); }
 }
 .pages{
   height:100%; display:flex;
@@ -104,7 +97,7 @@ input,select,button{
 button{cursor:pointer; min-height:44px; transition:transform var(--trans-fast),box-shadow var(--trans-fast)}
 button:active{transform:scale(.98)}
 .btn{padding:12px 16px}
-.btn.accent{ background:#123422; border-color:#1f6b46; color:#defbe6 }
+.btn.accent{ background:#0f2f21; border-color:#227a50; color:#dffbe9 }
 .btn.warn{ background:#3a1212; border-color:#6a1d1d; color:#ffd5d5 }
 .muted{color:var(--muted); font-size:14px}
 table{width:100%; border-collapse:collapse; font-size:16px}
@@ -115,104 +108,93 @@ th{color:#e8edf6; font-weight:600}
 :focus{ outline:none }
 :focus-visible{ outline:2px solid #3b82f6; outline-offset:2px }
 
-/* ========== 底部 Tab（上移与避让） ========== */
+/* ========== 底部 Tab ========== */
 .tabbar{
   position:fixed; left:8px; right:8px;
   bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-offset));
   z-index:60;
   display:flex; justify-content:space-around; gap:6px;
   height: var(--tabbar-h);
-  padding: 0 10px;
   border-top:1px solid var(--chrome-line);
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
 }
 .tabbtn{
-  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
-  padding:8px; border-radius:12px; border:1px solid transparent;
-  color:#e8eefb; font-size:12px; min-width:0;
+  flex:1;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px;                   /* 图标和文字间距小一点 */
+  color:#e8eefb;
+  font-size:11px;            /* 字体缩小，不喧宾夺主 */
+  min-width:0;
   transition:background var(--trans-fast), border-color var(--trans-fast), color var(--trans-fast);
+  padding: 8px 4px;
 }
-.tabbtn.active{ border-color:#3a475c; background:#0e1522; color:#ffffff; }
+.tabbtn .ico{
+  font-size:36px;            /* 图标放大 */
+  line-height:1;
+}
+.tabbtn.active{
+  background: linear-gradient(180deg,#0e1522,#0c1019);
+  border-color:#3e516a;
+  color:#ffffff;
+}
 
-/* ========== 炸弹卡（保留原配色，动效更顺滑） ========== */
+/* ========== 炸弹卡 ========== */
 .bombCard{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
   border-radius:14px;
-  background: linear-gradient(180deg,#3a1216,#241014); /* 原配色保留 */
-  border:1px solid rgba(255,100,100,.28);
+  background: linear-gradient(180deg,#3a1216,#241014);
+  border:1px solid rgba(197, 0, 0, 0.28);
   padding:18px 12px; text-align:center;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.04),
-    0 8px 20px rgba(90,20,20,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22);
 }
 .bombLabel{ font-size:13px; color:#ffd8d8; display:flex; align-items:center; gap:6px; letter-spacing:.2px }
 .bombLabel::before{content:"💣";}
 .bombValue{ font-weight:800; font-size:30px; letter-spacing:.4px; color:#fff2f2 }
 .bombBtns .btn{
-  min-width:88px; min-height:52px; font-size:18px; font-weight:800; border-radius:14px;
-  transition: transform .12s ease, box-shadow .18s ease, opacity .18s ease;
+  min-width:128px; min-height:62px; font-size:24px; font-weight:800; border-radius:14px;
 }
 #bombDec, #bombInc{ background:#2b0f12; border-color:#7a2d2d; color:#ffe2e2 }
 #bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede }
-.bombBtns .btn:active{ transform:scale(.97) }
-.bombBtns .btn:hover{ box-shadow:0 6px 14px rgba(120,30,30,.22) }
 
-/* —— 动效类（由 JS 切换类名触发：bombPulse / boomUp / boomDown） —— */
-/* 任何变更：轻弹 */
-.bombPulse{ animation: bombPulse .22s cubic-bezier(.22,.61,.36,1) }
-@keyframes bombPulse{
-  0%{ transform: scale(.985) }
-  100%{ transform: scale(1) }
-}
-/* 增加：轻微上抬 + 柔光 */
-.boomUp{ animation: bombBumpUp .36s cubic-bezier(.22,.61,.36,1), bombGlow .6s ease-out }
-@keyframes bombBumpUp{
-  0%{ transform: translateY(0) scale(1) }
-  40%{ transform: translateY(-2px) scale(1.01) }
-  100%{ transform: translateY(0) scale(1) }
-}
-@keyframes bombGlow{
-  0%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22), 0 0 0 rgba(255,120,120,0) }
-  50%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22), 0 0 14px rgba(255,120,120,.35) }
-  100%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22), 0 0 0 rgba(255,120,120,0) }
-}
-/* 减少：细小水平摇动 */
-.boomDown{ animation: bombShake .28s cubic-bezier(.36,.07,.19,.97) }
-@keyframes bombShake{
-  0%{ transform: translateX(0) }
-  25%{ transform: translateX(-2px) }
-  50%{ transform: translateX( 2px) }
-  75%{ transform: translateX(-1px) }
-  100%{ transform: translateX(0) }
-}
-/* 数字微动（可用同一类触发） */
-.bombValue.bombPulse{ animation: valueLift .22s cubic-bezier(.22,.61,.36,1) }
-@keyframes valueLift{
-  0%{ transform: translateY(0) }
-  50%{ transform: translateY(-1px) }
-  100%{ transform: translateY(0) }
-}
 
-/* ========== 小计浮条/提示条 ========== */
+/* ========== 小计浮条 ========== */
+/* 让“小计浮条”永远在四个按钮之上，并再上移一些 */
 .subtotalDock{
-  position:fixed; left:10px; right:10px;
-  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + env(safe-area-inset-bottom));
-  z-index:59;
-  opacity:0; transform:translateY(8px);
-  pointer-events:none;
-  transition:opacity .25s cubic-bezier(.22,.61,.36,1), transform .25s cubic-bezier(.22,.61,.36,1);
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 28px + env(safe-area-inset-bottom));
+  /* ↑ 这里 28px 你可按需调大/调小（20~36 都行） */
+  z-index: 80;  /* 必须比 .tabbar 的 60 大 */
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
 }
 .subtotalDock.show{ opacity:1; transform:translateY(0) }
 .subtotalDock .dockInner{
-  display:flex; justify-content:space-between; align-items:center; gap:12px;
-  padding:10px 12px; border:1px solid var(--chrome-line); border-radius:12px;
+  display:flex; justify-content:space-between; align-items:center; gap:16px;
+  padding:12px 14px;
+  border:1px solid var(--chrome-line);
+  border-radius:20px;
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+.subtotalDock .dockInner > div{
+  font-size:13px;            /* 标题适中 */
+  color:#dfe7f6;
+}
+.subtotalDock .dockInner .mono{
+  font-size:18px;            /* 数字略大但不过分 */
+  font-weight:700;
+  letter-spacing:.2px;
+}
+#dockPot{ font-size:19px; font-weight:800; }
 
+/* ========== Toast ========== */
 .toast{
   position:fixed; left:50%;
   bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 24px);
@@ -224,7 +206,7 @@ th{color:#e8edf6; font-weight:600}
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 
-/* ========== 实时排名（序号更大、分数更醒目） ========== */
+/* ========== 排名卡片 ========== */
 .rankHeader{ text-align:center; margin:4px 0 10px 0 }
 .rankHeader h2{ margin:0; font-size:17px; letter-spacing:.4px }
 .rankHeader .sub{ margin-top:4px; font-size:12px; color:var(--muted) }
@@ -253,7 +235,244 @@ th{color:#e8edf6; font-weight:600}
 .rankCard.neg .rankScore{ color:#f87171 }
 .rankCard.zero .rankScore{ color:#e5e7eb }
 
-/* ========== 无障碍：减少动态时弱化动画 ========== */
-@media (prefers-reduced-motion: reduce){
-  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+/* ========== 其它细节 ========== */
+.remainInp:disabled{ opacity:.6; color:#fff; }
+
+/* ---- 统一控制小计浮条与底部 Tab 的相对间距 ---- */
+:root{
+  --dock-gap: 40px;  /* 小计浮条距 Tab 的额外间距（可按需改 24~48） */
+}
+
+/* 小计浮条：比 tabbar 层级低，不会遮住；并往上抬一些 */
+.subtotalDock{
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + var(--dock-gap) + env(safe-area-inset-bottom));
+  z-index: 58;  /* tabbar 是 60；小计条放在其下方，避免遮挡 */
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;  /* 保险：即使视觉重叠也不会拦截点击 */
+  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
+}
+.subtotalDock.show{ opacity:1; transform:translateY(0) }
+
+/* 内部样式保持不变（如需） */
+.subtotalDock .dockInner{
+  display:flex; justify-content:space-between; align-items:center; gap:16px;
+  padding:12px 14px;
+  border:1px solid var(--chrome-line);
+  border-radius:20px;
+  background: var(--chrome-bg-blur);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+/* ---- 统一变量：小计条高度与间距 ---- */
+:root{
+  --dock-h: 54px;     /* 小计条本身的可视高度（按你的样式大约 50~56） */
+  --dock-gap: 24px;   /* 小计条与底部四个按钮之间的垂直间距 */
+}
+
+/* 让页面底部为两块固定元素都预留空间（Tab + 小计条 + 间距） */
+.page{
+  padding-bottom: calc(
+    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
+  ) !important;
+}
+
+/* 小计条：放在 Tab 上方；层级低于 Tab，不挡点击；必要时再调 gap 即可 */
+.subtotalDock{
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(
+    var(--tabbar-h) + var(--tabbar-offset) + var(--dock-gap) + env(safe-area-inset-bottom)
+  ) !important;
+  z-index: 58;                /* tabbar 是 60，这里更低，不会遮挡 */
+  pointer-events: none;       /* 即使重叠也不会拦截点击 */
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
+}
+.subtotalDock
+
+/* === 简约分段式 Tab（图标大、文字小、无厚重边框） === */
+.tabbar{
+  position: fixed;
+  left: 8px; right: 8px;
+  bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-offset));
+  z-index: 60;
+  display: flex; gap: 0; justify-content: space-between;
+  height: var(--tabbar-h);
+  padding: 0 10px;                    /* 内边距更轻 */
+  border-top: 1px solid var(--chrome-line);
+  background: var(--chrome-bg-blur);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;                /* 容器轻圆角 */
+}
+
+/* 按钮本体：去掉全局按钮的边框和背景，做扁平 */
+.tabbtn{
+  position: relative;
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  padding: 10px 4px;
+  background: transparent !important;
+  border: none !important;            /* 覆盖全局 button 边框 */
+  box-shadow: none !important;
+  color: #cfd7e6;
+  font-size: 11px;                    /* 文字小而克制 */
+  min-width: 0;
+  transition: transform .12s ease, color .18s ease, background .18s ease;
+}
+
+/* 图标更大、更聚焦 */
+.tabbtn .ico{
+  font-size: 36px;                    /* 图标主角 */
+  line-height: 1;
+  filter: saturate(.95) brightness(1.05);
+}
+
+/* 顶部细线指示选中（优雅，不喧宾） */
+.tabbtn::before{
+  content: "";
+  position: absolute;
+  left: 1%; right: 1%; top: 6px;
+  height: 3px; border-radius: 3px;
+  background: var(--accent);
+  opacity: 0; transform: scaleX(.4);
+  transition: transform .22s var(--trans-fast), opacity .22s var(--trans-fast);
+}
+.tabbtn.active{
+  color: #ffffff;
+}
+.tabbtn.active .ico{ filter: none; }
+.tabbtn.active::before{
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* 轻分隔线：只在容器里做“列线”，不加卡片外框 */
+.tabbtn:not(:last-child)::after{
+  content: "";
+  position: absolute;
+  right: 0; top: 14px; bottom: 14px;
+  width: 1px; background: var(--chrome-line);
+  opacity: .6;
+}
+
+/* 触感反馈：悬停轻底色、按下轻微下沉（移动设备也自然） */
+@media (hover:hover){
+  .tabbtn:hover{ background: rgba(255,255,255,.02); }
+}
+.tabbtn:active{ transform: translateY(1px) scale(.99); }
+
+/* === Bomb Card 动画恢复与增强（与 app.js 的 pulseBomb 配合） === */
+
+/* 平滑动画需的 hint */
+.bombCard{ will-change: transform, box-shadow; }
+.bombValue{ will-change: transform, text-shadow; }
+
+/* 任何变更：更强的轻弹（加减或重置时通用） */
+.bombPulse{
+  animation: bombPulse .28s cubic-bezier(.22,.61,.36,1.05);
+}
+@keyframes bombPulse{
+  0%   { transform: scale(.96) }
+  60%  { transform: scale(1.03) }
+  100% { transform: scale(1) }
+}
+
+/* 增加炸弹：上抬 + 柔光 */
+.boomUp{
+  animation:
+    bombBumpUp .46s cubic-bezier(.22,.61,.36,1.05),
+    bombGlow   .80s ease-out;
+}
+@keyframes bombBumpUp{
+  0%   { transform: translateY(0) scale(1) }
+  40%  { transform: translateY(-6px) scale(1.03) }
+  100% { transform: translateY(0) scale(1) }
+}
+@keyframes bombGlow{
+  0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
+  50%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 30px rgba(90,20,20,.35), 0 0 22px rgba(255,120,120,.55) }
+  100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
+}
+
+/* 减少炸弹：轻摇动（带极小旋转） */
+.boomDown{
+  animation: bombShake .36s cubic-bezier(.36,.07,.19,.97);
+}
+@keyframes bombShake{
+  0%   { transform: translateX(0) rotate(0deg) }
+  20%  { transform: translateX(-4px) rotate(-0.6deg) }
+  50%  { transform: translateX( 4px) rotate( 0.6deg) }
+  80%  { transform: translateX(-3px) rotate(-0.4deg) }
+  100% { transform: translateX(0) rotate(0deg) }
+}
+
+/* 数字微动（与 bombPulse 同时触发时更有层次） */
+.bombValue.bombPulse{
+  animation: valueLift .28s cubic-bezier(.22,.61,.36,1.05);
+}
+@keyframes valueLift{
+  0%   { transform: translateY(0);   text-shadow: none }
+  50%  { transform: translateY(-3px); text-shadow: 0 2px 8px rgba(255,180,180,.45) }
+  100% { transform: translateY(0);   text-shadow: none }
+}
+
+/* 可选：按钮交互的轻反馈（不影响动画） */
+.bombBtns .btn{
+  transition: transform .12s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.bombBtns .btn:hover{ box-shadow: 0 10px 24px rgba(120,30,30,.34) }
+.bombBtns .btn:active{ transform: scale(.98) }
+
+/* 顶部赢家选择：标签 + 扁平按钮（和全局 .btn 不冲突） */
+.winnerLabel{
+  font-size: 14px;
+  color: var(--muted);
+  margin-right: 8px;
+}
+#winnerQuick{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.winnerBtn{
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: 999px;
+}
+.winnerBtn.accent{
+  background: #103b27;
+  border-color: #1f7b4f;
+  color: #d8ffe9;
+}
+
+/* 表格赢家行：绿色描边 + 淡绿底；禁用输入依旧清晰 */
+.winnerRow{
+  background: rgba(41,208,118,.08);
+}
+.winnerRow td{
+  border-bottom-color: rgba(41,208,118,.28);
+  box-shadow: inset 3px 0 0 rgba(41,208,118,.55); /* 左侧竖线更直观 */
+}
+.winnerRow .remainInp:disabled{
+  opacity: .95; color: #fff; border-color: rgba(41,208,118,.55);
+}
+
+/* 赢家之后的行：轻微加深底色区分（不抢眼） */
+.afterWinnerRow{
+  background: rgba(255,255,255,.015);
+}
+.afterWinnerRow td{
+  border-bottom-color: rgba(180,186,206,.24);
 }
