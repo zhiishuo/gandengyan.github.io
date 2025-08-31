@@ -165,7 +165,7 @@ function renderRemainArea(){
   state.players.forEach((p,i)=>{
     const isW = (i===state.remainWinner);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)} ${isW?'<span class="tagWinner">赢家</span>':''}</td>
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
       <td>
         <input type="number" min="0" step="1" inputmode="numeric"
           class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
