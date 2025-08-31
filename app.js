@@ -1,5 +1,16 @@
 /* ================== 状态 ================== */
-const LS_KEY="gandengyan_scoreboard_mobile_full_v2_spring";
+const LS_KEY = "gandengyan_scoreboard_mobile_full_v2_spring";
+// 本轮草稿（不入账前都保留）
+let roundDraft = { remain: [], springs: [] }; // remain[i]=数字|undefined；springs[i]=true|false
+const DRAFT_KEY = LS_KEY + "_roundDraft";
+function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(roundDraft)); }catch(e){} }
+function loadDraft(){
+  try{
+    const s = localStorage.getItem(DRAFT_KEY);
+    if(s){ const d = JSON.parse(s); if(d && typeof d==='object'){ roundDraft = { remain: d.remain||[], springs: d.springs||[] }; } }
+  }catch(e){}
+}
+
 let state = {
   players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
   history: [],
@@ -11,7 +22,7 @@ function save(){localStorage.setItem(LS_KEY, JSON.stringify(state));}
 function load(){const s=localStorage.getItem(LS_KEY); if(s){try{state=JSON.parse(s)}catch{}}}
 function mult(){return Math.pow(2, Math.max(0, +state.bombCount||0));}
 
-/* ================== 视图切换（仅点击，无滑手势） ================== */
+/* ================== 视图切换（仅点击，无横手势） ================== */
 const pagesEl = document.getElementById('pages');
 const tabs = [...document.querySelectorAll('.tabbtn')];
 const pageIndex = { players:0, score:1, rank:2, history:3 };
@@ -22,7 +33,6 @@ function go(tab){
   pagesEl.style.transform = `translate3d(${-100*idx}%,0,0)`;
   tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
 
-  // 仅记分页显示小计条
   const dock = document.getElementById('subtotalDock');
   if (dock) dock.classList.toggle('show', tab === 'score');
 
@@ -30,7 +40,23 @@ function go(tab){
 }
 tabs.forEach(b=> b.addEventListener('click', ()=> go(b.dataset.tab)));
 
-/* 禁止横向滑动（Safari 双保险） */
+/* —— 切换赢家/模式等会重渲染，先把当前 DOM 写回草稿，避免丢失 —— */
+function snapshotRoundDraftFromDOM(){
+  document.querySelectorAll('.remainInp').forEach(inp=>{
+    const idx = +inp.dataset.idx;
+    const raw = (inp.value ?? "").trim();
+    if (raw === "") return;
+    const v = Math.max(0, Math.floor(Number(raw)||0));
+    roundDraft.remain[idx] = v;
+  });
+  document.querySelectorAll('.springBtn').forEach(btn=>{
+    const idx = +btn.dataset.idx;
+    roundDraft.springs[idx] = btn.classList.contains('accent');
+  });
+  saveDraft();
+}
+
+/* 禁止横向滑动 */
 (function lockHorizontalSwipe(){
   const vp = document.querySelector('.viewport');
   if(!vp) return;
@@ -62,10 +88,12 @@ function updateBombUI(){
   const dockMult = document.getElementById('dockMult');
   if(dockMult) dockMult.textContent = '×'+m;
 }
-function pulseBomb(){
+function pulseBomb(className='bombPulse'){
   const card = document.getElementById('bombCard');
   if(!card) return;
-  card.classList.remove('bombPulse'); void card.offsetWidth; card.classList.add('bombPulse');
+  card.classList.remove('bombPulse','boomUp','boomDown');
+  void card.offsetWidth;
+  card.classList.add(className);
 }
 
 /* ================== 玩家 ================== */
@@ -82,31 +110,62 @@ function renderPlayers(){
     inp.addEventListener('input', e=>{
       const i = +e.target.dataset.idx;
       state.players[i].name = e.target.value || ('玩家'+(i+1));
-      save(); renderRemainArea(); renderQuickWinner(); renderRank(); recomputePreview();
+      save(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); recomputePreview();
     });
   });
   renderRank();
 }
 
-/* ================== 记分页：赢家按钮/输入 ================== */
+/* ================== 记分页：赢家按钮（仅按钮选择-用于 remain） ================== */
 function renderQuickWinner(){
-  const q = document.getElementById('winnerQuick'); q.innerHTML="";
+  const q = document.getElementById('winnerQuick'); if(!q) return;
+  // 标题 + 按钮容器
+  q.innerHTML = `<span class="winnerLabel">赢家选择：</span>`;
   state.players.forEach((p,i)=>{
     const b = document.createElement('button');
-    b.className = 'btn' + (i===state.remainWinner?' accent':'');
+    b.className = 'btn winnerBtn' + (i===state.remainWinner?' accent':'');
     b.textContent = p.name;
-    b.addEventListener('click', ()=>{ state.remainWinner=i; save(); renderRemainArea(); renderQuickWinner(); recomputePreview(); });
+    b.addEventListener('click', ()=>{
+      snapshotRoundDraftFromDOM();
+      state.remainWinner = i;
+      save(); saveDraft();
+      renderRemainArea();
+      renderQuickWinner();
+      recomputePreview();
+    });
     q.appendChild(b);
   });
 }
 
-/* 春天：按钮化（每行一个按钮） */
+/* winner1 模式：渲染可选赢家列表 */
+function renderWinner1(){
+  const wl = document.getElementById('winnerList'); if(!wl) return;
+  wl.innerHTML = "";
+  state.players.forEach((p,i)=>{
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = p.name;
+    if(wl.dataset.selected && +wl.dataset.selected===i) b.classList.add('accent');
+    b.addEventListener('click', ()=>{
+      wl.dataset.selected = String(i);
+      renderWinner1();
+      recomputePreview();
+    });
+    wl.appendChild(b);
+  });
+}
+
+
+/* 春天/剩牌表格 */
 function renderRemainArea(){
-  const rb = document.getElementById('remainBody'); rb.innerHTML="";
+  snapshotRoundDraftFromDOM();
+  loadDraft();
+  const rb = document.getElementById('remainBody'); if(!rb) return;
+  rb.innerHTML="";
   state.players.forEach((p,i)=>{
     const isW = (i===state.remainWinner);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)} ${isW?'<span class="tagWinner">赢家</span>':''}</td>
       <td>
         <input type="number" min="0" step="1" inputmode="numeric"
           class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
@@ -116,12 +175,36 @@ function renderRemainArea(){
         <button class="btn springBtn" data-idx="${i}" ${isW?'disabled':''}>春天</button>
       </td>`;
     rb.appendChild(tr);
+    // 行配色：赢家行高亮；赢家之后的行加轻微底色区分
+    if (isW) tr.classList.add('winnerRow');
+    if (i > state.remainWinner) tr.classList.add('afterWinnerRow');
+
+    const inp = tr.querySelector('.remainInp');
+    if (roundDraft.remain[i] != null) {
+      inp.value = roundDraft.remain[i];
+    } else if (isW) {
+      inp.value = 0;
+    }
+    const btn = tr.querySelector('.springBtn');
+    if (roundDraft.springs[i]) btn.classList.add('accent');
   });
-  rb.querySelectorAll('.remainInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
+
+  rb.querySelectorAll('.remainInp').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const idx = +e.target.dataset.idx;
+      const raw = (e.target.value||'').trim();
+      roundDraft.remain[idx] = (raw==='' ? undefined : Math.max(0, Math.floor(Number(raw)||0)));
+      saveDraft();
+      recomputePreview();
+    });
+  });
   rb.querySelectorAll('.springBtn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(btn.disabled) return;
-      btn.classList.toggle('accent'); // 高亮=春天
+      btn.classList.toggle('accent');
+      const idx = +btn.dataset.idx;
+      roundDraft.springs[idx] = btn.classList.contains('accent');
+      saveDraft();
       recomputePreview();
     });
   });
@@ -138,34 +221,31 @@ function renderRemainArea(){
 
 /* ================== 记分计算/预览/入账 ================== */
 function switchMode(){
+  snapshotRoundDraftFromDOM();               // 切模式先保存草稿
   const mode = document.getElementById('mode').value;
   document.getElementById('modeRemain').style.display = (mode==='remain')?'block':'none';
   document.getElementById('modeWinner1').style.display = (mode==='winner1')?'block':'none';
   document.getElementById('modeManual').style.display = (mode==='manual')?'block':'none';
+  if(mode==='winner1') renderWinner1();
   recomputePreview();
 }
 
 function computeRound(){
   const mode = document.getElementById('mode').value;
   const n = N(), m = mult();
+
   if (mode==='remain'){
     const w = state.remainWinner;
-    const inputs = [...document.querySelectorAll('.remainInp')];
-    const springBtns = [...document.querySelectorAll('.springBtn')];
-    const remain = Array(n).fill(0), springMark = Array(n).fill(false);
+    // 完全基于 roundDraft 计算，避免 DOM 切换导致的瞬时空值
+    const remain = Array(n).fill(0);
+    const springMark = Array(n).fill(false);
 
-    for (const inp of inputs){
-      const i=+inp.dataset.idx; const raw=inp.value.trim();
-      const v = raw===""?0:Number(raw);
-      if (i===w) remain[i]=0;
-      else{
-        if(!Number.isFinite(v) || v<0 || Math.floor(v)!==v) return {error:"剩牌必须是非负整数"};
-        remain[i]=v;
-      }
-    }
-    for(const btn of springBtns){
-      const i=+btn.dataset.idx;
-      springMark[i] = btn.classList.contains('accent') && i!==w;
+    for (let i=0; i<n; i++){
+      if (i === w) { remain[i] = 0; continue; }
+      const v = roundDraft.remain[i] == null ? 0 : Number(roundDraft.remain[i]);
+      if (!Number.isFinite(v) || v < 0 || Math.floor(v) !== v) return {error:"剩牌必须是非负整数"};
+      remain[i] = v;
+      springMark[i] = !!roundDraft.springs[i];
     }
 
     const delta = Array(n).fill(0); let pot=0;
@@ -177,22 +257,31 @@ function computeRound(){
     }
     delta[w]=pot;
     const remDesc = remain.map((v,i)=>`${state.players[i].name}:${v}${springMark[i]?'(春)':''}`).join('， ');
-    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[w].name} ｜ 剩牌：[${remDesc}] ×${m}`, springs:springMark};
-  }else if(mode==='winner1'){
-    const sel = document.getElementById('winnerList').dataset.selected;
+    const payload = { mode:'remain', winner: w, remain:[...remain], springs:[...springMark] };
+    return {delta, desc:`剩牌结算 ｜ 赢家：${state.players[w].name} ｜ 剩牌：[${remDesc}] ×${m}`, springs:springMark, payload};
+  }
+
+  if(mode==='winner1'){
+    const wl=document.getElementById('winnerList');
+    const sel = wl ? wl.dataset.selected : undefined;
     if(sel===undefined) return {error:"请选择胜者"};
     const idx=+sel, delta=Array(n).fill(0); delta[idx]=1*m;
-    return {delta, desc:`胜者：${state.players[idx].name}（+1×${m}）`};
-  }else{
-    const inputs = [...document.querySelectorAll('.manualInp')];
-    const delta = Array(n).fill(0);
-    for(const inp of inputs){
-      const i=+inp.dataset.idx; const raw=inp.value.trim(); const v=raw===""?0:Number(raw);
-      if(!Number.isFinite(v)) return {error:"请输入数字"};
-      delta[i]=v*m;
-    }
-    return {delta, desc:`手工输入 ×${m}`};
+    const payload = { mode:'winner1', winner: idx };
+    return {delta, desc:`胜者：${state.players[idx].name}（+1×${m}）`, payload};
   }
+
+  // manual
+  const inputs = [...document.querySelectorAll('.manualInp')];
+  const delta = Array(n).fill(0);
+  const manualRaw = Array(n).fill(0);
+  for(const inp of inputs){
+    const i=+inp.dataset.idx; const raw=(inp.value??"").trim(); const v=raw===""?0:Number(raw);
+    if(!Number.isFinite(v)) return {error:"请输入数字"};
+    manualRaw[i]=v; // 未乘倍数
+    delta[i]=v*m;   // 乘倍数
+  }
+  const payload = { mode:'manual', manual: manualRaw };
+  return {delta, desc:`手工输入 ×${m}`, payload};
 }
 
 function recomputePreview(){
@@ -201,72 +290,141 @@ function recomputePreview(){
   const pot = document.getElementById('winnerPot');
   const dockPot = document.getElementById('dockPot');
   if(res?.error){
-    box.textContent='— '+res.error;
-    pot.textContent='';
+    if(box) box.textContent='— '+res.error;
+    if(pot) pot.textContent='';
     if(dockPot) dockPot.textContent='+0';
     return;
   }
   const signs = res.delta.map((v,i)=>`${state.players[i].name}:${v>=0?'+':''}${v}`);
-  box.textContent = signs.join('， ');
+  if(box) box.textContent = signs.join('， ');
   if (document.getElementById('mode').value==='remain'){
     const w = state.remainWinner;
-    pot.textContent = `赢家（${state.players[w].name}）本轮预计：+${res.delta[w]}`;
+    if(pot) pot.textContent = `赢家（${state.players[w].name}）本轮预计：+${res.delta[w]}`;
     if(dockPot) dockPot.textContent = `+${res.delta[w]}`;
   }else{
-    pot.textContent='';
+    if(pot) pot.textContent='';
     if(dockPot) dockPot.textContent = '+0';
   }
 }
 
-function applyRound(delta, desc){
+function applyRound(delta, desc, payload){
   const m = mult();
   state.players.forEach((p,i)=> p.score += (delta[i]||0));
-  state.history.push({desc, delta, bombs: state.bombCount, mult: m});
-  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory();
+  state.history.push({desc, delta, bombs: state.bombCount, mult: m, payload});
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory();
   save();
 }
 
 function commitRound(){
+  const prevBomb = state.bombCount;
   const res = computeRound();
-  if(res.error){ alert(res.error); return; }
-  if(res.springs){
+  if (res.error){ alert(res.error); return; }
+  if (res.springs){
     const list = res.springs.map((v,i)=> v?state.players[i].name:null).filter(Boolean);
     if (list.length) res.desc += ` ｜ 春天：${list.join('、')}`;
   }
-  applyRound(res.delta, res.desc);
+
+  // 1) 入账
+  applyRound(res.delta, res.desc, res.payload);
+
+  // 2) 清理输入（开始新一轮）
   document.querySelectorAll('.remainInp').forEach(inp=>{ if(!inp.disabled) inp.value=""; });
   document.querySelectorAll('.springBtn').forEach(btn=>{ if(!btn.disabled) btn.classList.remove('accent'); });
   document.querySelectorAll('.manualInp').forEach(inp=> inp.value="");
   const wl=document.getElementById('winnerList'); if(wl) wl.dataset.selected="";
+  roundDraft = { remain: [], springs: [] }; // 仅在入账后清空草稿
+  saveDraft();
   recomputePreview();
+
+  // 3) 入账后炸弹自动清零
+  const resetBtn = document.getElementById('bombReset');
+  if (resetBtn) resetBtn.click();
+  else { state.bombCount=0; updateBombUI(); save(); recomputePreview(); }
+  pulseBomb(prevBomb < state.bombCount ? 'boomUp' : 'bombPulse');
+
+  // 4) 反馈
   showToast('✅ 入账成功');
 }
 
 /* ================== 历史 ================== */
 function renderHistory(){
-  const tb = document.getElementById('historyBody'); tb.innerHTML="";
+  const tb = document.getElementById('historyBody'); if(!tb) return;
+  tb.innerHTML="";
   state.history.forEach((h,ri)=>{
     const tr = document.createElement('tr');
     const detail = h.delta.map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`).join('， ');
     tr.innerHTML = `<td>${ri+1}</td>
       <td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
-      <td><button class="btn" data-del="${ri}">删除</button></td>`;
+      <td>
+        <button class="btn" data-edit="${ri}">编辑</button>
+        <button class="btn" data-del="${ri}">删除</button>
+      </td>`;
     tb.appendChild(tr);
   });
   tb.querySelectorAll('button[data-del]').forEach(b=> b.addEventListener('click', ()=>deleteRound(+b.dataset.del)));
+  tb.querySelectorAll('button[data-edit]').forEach(b=> b.addEventListener('click', ()=>editRound(+b.dataset.edit)));
 }
 function deleteRound(idx){
   const h=state.history[idx]; if(!h) return;
   state.players.forEach((p,i)=> p.score -= (h.delta[i]||0));
   state.history.splice(idx,1);
-  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save();
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory(); save();
   recomputePreview();
+}
+function editRound(idx){
+  const h = state.history[idx]; if(!h){ return; }
+  if(!h.payload){
+    alert('这条历史缺少可编辑数据（旧记录）。请手动删除后重新入账一次。');
+    return;
+  }
+  // 1) 回滚到该回合之前：重算前缀分数并截断历史
+  state.players.forEach(p=> p.score = 0);
+  for(let r=0; r<idx; r++){
+    const hi = state.history[r];
+    for(let j=0;j<state.players.length;j++) state.players[j].score += (hi.delta[j]||0);
+  }
+  state.history = state.history.slice(0, idx);
+
+  // 2) 还原倍数/炸弹 & UI 草稿
+  state.bombCount = h.bombs || 0;
+  const pl = h.payload;
+  const modeSel = document.getElementById('mode');
+  if(modeSel) modeSel.value = pl.mode;
+
+  if(pl.mode === 'remain'){
+    state.remainWinner = +pl.winner || 0;
+    roundDraft = { remain: [...(pl.remain||[])], springs: [...(pl.springs||[])] };
+    saveDraft();
+  } else if(pl.mode === 'winner1'){
+    roundDraft = { remain: [], springs: [] };
+    saveDraft();
+    setTimeout(()=>{
+      const wl = document.getElementById('winnerList');
+      if(wl) wl.dataset.selected = String(pl.winner);
+      renderWinner1();
+      recomputePreview();
+    }, 0);
+  } else if(pl.mode === 'manual'){
+    roundDraft = { remain: [], springs: [] };
+    saveDraft();
+    setTimeout(()=>{
+      const inputs = [...document.querySelectorAll('.manualInp')];
+      (pl.manual||[]).forEach((v,i)=>{ if(inputs[i]) inputs[i].value = String(v); });
+      recomputePreview();
+    }, 0);
+  }
+
+  // 3) 切到记分页并刷新
+  save();
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory();
+  updateBombUI(); recomputePreview();
+  go('score');
 }
 function clearHistory(){
   if(!state.history.length) return;
   if(!confirm('确定清空历史并回滚分数吗？')) return;
   for(const h of state.history){ state.players.forEach((p,i)=> p.score -= (h.delta[i]||0)); }
-  state.history=[]; renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save();
+  state.history=[]; renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory(); save();
   recomputePreview();
 }
 function exportCsv(){
@@ -280,9 +438,10 @@ function exportCsv(){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-/* ================== 实时排名（显著分数） ================== */
+/* ================== 实时排名 ================== */
 function renderRank(){
-  const box = document.getElementById('rankList'); box.innerHTML="";
+  const box = document.getElementById('rankList'); if(!box) return;
+  box.innerHTML="";
   const meta = document.getElementById('rankMeta');
   const arr = state.players.map((p,i)=>({i, name:p.name, score:p.score}));
   arr.sort((a,b)=> b.score - a.score || a.i - b.i);
@@ -309,27 +468,29 @@ function renderRank(){
   });
 }
 
-/* ================== 炸弹交互（无输入框，仅按钮） ================== */
+/* ================== 炸弹交互（按钮） ================== */
 function bindBombUI(){
   const dec = document.getElementById('bombDec');
   const inc = document.getElementById('bombInc');
   const rst = document.getElementById('bombReset');
   updateBombUI();
   function sync(newVal){
+    const old = state.bombCount;
     const k = Math.max(0, Math.floor(Number(newVal)||0));
-    if (k !== state.bombCount){ pulseBomb(); }
     state.bombCount = k;
     updateBombUI(); save(); recomputePreview();
+    pulseBomb(k > old ? 'boomUp' : 'boomDown');
   }
-  dec.addEventListener('click', ()=> sync(state.bombCount - 1));
-  inc.addEventListener('click', ()=> sync(state.bombCount + 1));
-  rst.addEventListener('click', ()=> sync(0));
+  if(dec) dec.addEventListener('click', ()=> sync(state.bombCount - 1));
+  if(inc) inc.addEventListener('click', ()=> sync(state.bombCount + 1));
+  if(rst) rst.addEventListener('click', ()=> sync(0));
 }
 
 /* ================== 其它操作 ================== */
 function zeroScores(){ if(!confirm("将所有玩家分数清零？")) return; state.players.forEach(p=>p.score=0); renderPlayers(); renderRank(); save(); }
-function resetNames(){ state.players.forEach((p,i)=> p.name="玩家"+(i+1)); renderPlayers(); renderRemainArea(); renderQuickWinner(); save(); }
+function resetNames(){ state.players.forEach((p,i)=> p.name="玩家"+(i+1)); renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); save(); }
 function applyPlayerCount(newN){
+  snapshotRoundDraftFromDOM();
   newN = Math.max(2, Math.min(12, Math.floor(newN)));
   if (newN===N()) return;
   if (!confirm("更改人数会清空历史记录并可能重置部分名字，确定吗？")) return;
@@ -346,7 +507,9 @@ function applyPlayerCount(newN){
     state.players.length=newN;
   }
   state.remainWinner=0;
-  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory(); save(); recomputePreview();
+  roundDraft = { remain: [], springs: [] }; // 人数变化时清空草稿
+  saveDraft();
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory(); save(); recomputePreview();
 }
 function undo(){ if(!state.history.length) return; deleteRound(state.history.length-1); }
 
@@ -354,6 +517,7 @@ function undo(){ if(!state.history.length) return; deleteRound(state.history.len
 let toastTimer=null;
 function showToast(text){
   const t=document.getElementById('toast');
+  if(!t) return;
   t.textContent=text; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=> t.classList.remove('show'), 1500);
@@ -372,21 +536,32 @@ window.addEventListener('resize', stickDockToTab);
 /* ================== 初始化 ================== */
 function init(){
   load();
+  loadDraft();
   go('score'); // 默认“记分”
-  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderRank(); renderHistory();
+  renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory();
   bindBombUI(); switchMode(); updateBombUI(); recomputePreview();
   stickDockToTab();
 
   // 交互绑定
-  document.getElementById('mode').addEventListener('change', switchMode);
-  document.getElementById('commit_m').addEventListener('click', commitRound);
-  document.getElementById('undo').addEventListener('click', undo);
-  document.getElementById('exportCsv').addEventListener('click', exportCsv);
-  document.getElementById('clearHistory').addEventListener('click', clearHistory);
-  document.getElementById('minusP').addEventListener('click', ()=> applyPlayerCount(N()-1));
-  document.getElementById('plusP').addEventListener('click', ()=> applyPlayerCount(N()+1));
-  document.getElementById('applyP').addEventListener('click', ()=> applyPlayerCount(Number(document.getElementById('setP').value||N())));
-  document.getElementById('zeroScores').addEventListener('click', zeroScores);
-  document.getElementById('resetNames').addEventListener('click', resetNames);
+  const modeSel = document.getElementById('mode');
+  if(modeSel) modeSel.addEventListener('change', switchMode);
+  const commitBtn = document.getElementById('commit_m');
+  if(commitBtn) commitBtn.addEventListener('click', commitRound);
+  const undoBtn = document.getElementById('undo');
+  if(undoBtn) undoBtn.addEventListener('click', undo);
+  const exportBtn = document.getElementById('exportCsv');
+  if(exportBtn) exportBtn.addEventListener('click', exportCsv);
+  const clearBtn = document.getElementById('clearHistory');
+  if(clearBtn) clearBtn.addEventListener('click', clearHistory);
+  const minusP = document.getElementById('minusP');
+  if(minusP) minusP.addEventListener('click', ()=> applyPlayerCount(N()-1));
+  const plusP = document.getElementById('plusP');
+  if(plusP) plusP.addEventListener('click', ()=> applyPlayerCount(N()+1));
+  const applyP = document.getElementById('applyP');
+  if(applyP) applyP.addEventListener('click', ()=> applyPlayerCount(Number(document.getElementById('setP').value||N())));
+  const zeroBtn = document.getElementById('zeroScores');
+  if(zeroBtn) zeroBtn.addEventListener('click', zeroScores);
+  const resetBtn = document.getElementById('resetNames');
+  if(resetBtn) resetBtn.addEventListener('click', resetNames);
 }
 init();
