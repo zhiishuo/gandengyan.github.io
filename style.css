@@ -240,7 +240,7 @@ th{color:#e8edf6; font-weight:600}
 
 /* ---- 统一控制小计浮条与底部 Tab 的相对间距 ---- */
 :root{
-  --dock-gap: 40px;  /* 小计浮条距 Tab 的额外间距（可按需改 24~48） */
+  --dock-gap: 30px;  /* 小计浮条距 Tab 的额外间距（可按需改 24~48） */
 }
 
 /* 小计浮条：比 tabbar 层级低，不会遮住；并往上抬一些 */
@@ -271,7 +271,7 @@ th{color:#e8edf6; font-weight:600}
 /* ---- 统一变量：小计条高度与间距 ---- */
 :root{
   --dock-h: 54px;     /* 小计条本身的可视高度（按你的样式大约 50~56） */
-  --dock-gap: 24px;   /* 小计条与底部四个按钮之间的垂直间距 */
+  --dock-gap: 20px;   /* 小计条与底部四个按钮之间的垂直间距 */
 }
 
 /* 让页面底部为两块固定元素都预留空间（Tab + 小计条 + 间距） */
@@ -358,7 +358,7 @@ th{color:#e8edf6; font-weight:600}
 .tabbtn:not(:last-child)::after{
   content: "";
   position: absolute;
-  right: 0; top: 14px; bottom: 14px;
+  right: 0; top: 18px; bottom: 18px;
   width: 1px; background: var(--chrome-line);
   opacity: .6;
 }
