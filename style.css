@@ -471,11 +471,4 @@ html{ background: var(--surface-bg); }
   pointer-events: none;
 }
 
-/* ====== 无障碍：减少动态 ====== */
-@media (prefers-reduced-motion: reduce){
-  *{ transition: none !important; animation: none !important; }
-  .subtotalDock{ opacity:1; transform:none; }
-  .dockActions, .gbtn{ opacity:1; transform:none; }
-}
-
 
