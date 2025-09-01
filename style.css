@@ -23,6 +23,19 @@
   /* 底部尺寸变量（统一管理） */
   --tabbar-h: 80px;
   --tabbar-offset: 18px;
+
+  /* 小计条尺寸/外观变量 */
+  --dock-h: 50px;           /* 小计条视觉高度 */
+  --dock-gap: 20px;         /* 与底部栏垂直间距（备选） */
+  --dock-alpha: .05;        /* 小计条内层半透明 */
+  --dock-maxw: 560px;       /* 最大宽度 */
+  --dock-side-gap: 12px;    /* 小屏留白 */
+
+  /* 小计条动画统一参数 */
+  --dock-dur: .32s;
+  --dock-ease: cubic-bezier(.22,.61,.36,1);
+  --dock-stagger: .06s;     /* 相邻按钮错位 */
+  --dock-delay: .04s;       /* 按钮整体进入延时 */
 }
 
 *{box-sizing:border-box}
@@ -123,16 +136,16 @@ th{color:#e8edf6; font-weight:600}
 .tabbtn{
   flex:1;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:4px;                   /* 图标和文字间距小一点 */
+  gap:4px;
   color:#e8eefb;
-  font-size:11px;            /* 字体缩小，不喧宾夺主 */
+  font-size:11px;
   min-width:0;
   transition:background var(--trans-fast), border-color var(--trans-fast), color var(--trans-fast);
   padding: 8px 4px;
 }
 .tabbtn .ico{
-  font-size:36px;            /* 图标放大 */
-      max-height: calc(var(--tabbar-h) - 24px);
+  font-size:36px;
+  max-height: calc(var(--tabbar-h) - 24px);
   line-height:1;
 }
 .tabbtn.active{
@@ -159,55 +172,119 @@ th{color:#e8edf6; font-weight:600}
 #bombDec, #bombInc{ background:#2b0f12; border-color:#7a2d2d; color:#ffe2e2 }
 #bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede }
 
-
-/* ========== 小计浮条 ========== */
-/* 让“小计浮条”永远在四个按钮之上，并再上移一些 */
+/* ========== 小计浮条（统一后的唯一版本） ========== */
+/* 外层：不接事件，放在底栏上方；出现/消失统一节奏 */
 .subtotalDock{
   position: fixed;
-  left: 8px;
-  right: 8px;
-  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 12px + env(safe-area-inset-bottom));
-  /* ↑ 这里 28px 你可按需调大/调小（20~36 都行） */
-  z-index: 80;  /* 必须比 .tabbar 的 60 大 */
-  opacity: 1;
-  transform: translateY(8px);
-  pointer-events: none;
-  transition: opacity .38s var(--trans-slow), transform .38s var(--trans-slow);
+  left: 50%;
+  right: auto;
+  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 12px + env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%) translateY(8px);
+  width: min(var(--dock-maxw), calc(100% - var(--dock-side-gap) * 2)) !important;
+  z-index: 80 !important;                 /* 一定高于 .tabbar(60) */
+  pointer-events: none;                   /* 外层不接事件 */
+    max-width: var(--dock-maxw);
+  opacity: 0;
+  transition:
+    opacity var(--dock-dur) var(--dock-ease),
+    transform var(--dock-dur) var(--dock-ease);
 }
-.subtotalDock.show{ opacity:1; transform:translateY(0) }
+.subtotalDock.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 内层：可点击，样式与过渡 */
 .subtotalDock .dockInner{
   display:flex; justify-content:space-between; align-items:center; gap:16px;
   padding:12px 14px;
   border:1px solid var(--chrome-line);
-  border-radius:20px;
-  background: var(--chrome-bg-blur);
-  backdrop-filter: blur( 0px);
+  border-radius:25px;
+  background: rgba(16, 24, 36, var(--dock-alpha));
+  border-color: var(--surface-tabbar-bd);
+  color: var(--ink);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   box-shadow: var(--shadow);
+  pointer-events: auto;                   /* 关键：允许点击 */
+  transition:
+    backdrop-filter var(--dock-dur) var(--dock-ease),
+    -webkit-backdrop-filter var(--dock-dur) var(--dock-ease),
+    background-color var(--dock-dur) var(--dock-ease);
 }
+
+/* 左侧文案（保持原样） */
 .subtotalDock .dockInner > div{
-  font-size:13px;            /* 标题适中 */
-  color:#dfe7f6;
+  font-size:13px; color:#dfe7f6;
 }
 .subtotalDock .dockInner .mono{
-  font-size:20px;            /* 数字略大但不过分 */
-  font-weight:700;
-  letter-spacing:.2px;
+  font-size:20px; font-weight:700; letter-spacing:.2px;
 }
 #dockPot{ font-size:20px; font-weight:800; }
 
+/* 右侧按钮组 */
+.dockActions{
+  display:flex; align-items:center; gap:8px;
+  margin-left:auto;
+  opacity: 0; transform: translateY(4px);
+  transition:
+    opacity var(--dock-dur) var(--dock-ease),
+    transform var(--dock-dur) var(--dock-ease);
+}
+.subtotalDock.show .dockActions{
+  opacity: 1; transform: translateY(0);
+}
 
+/* 通用按钮外观 */
+.gbtn{
+  display:inline-flex; align-items:center; gap:8px;
+  min-height:36px; padding:8px 12px;
+  border-radius:999px; font-size:14px; font-weight:600;
+  border:1px solid var(--line); background:#0f1724; color:var(--ink);
+  box-shadow: 0 4px 14px rgba(0,0,0,.16);
+  opacity: 0; transform: translateY(8px) scale(.98);
+  transition:
+    opacity var(--dock-dur) var(--dock-ease),
+    transform var(--dock-dur) var(--dock-ease),
+    box-shadow var(--dock-dur) var(--dock-ease),
+    background var(--dock-dur) var(--dock-ease),
+    border-color var(--dock-dur) var(--dock-ease);
+}
+.gbtn:active{ transform: translateY(0) scale(.98); transition-duration:.12s; }
+.gbtn.primary{ background:#103b27; border-color:#1f7b4f; color:#d8ffe9 }
+.gbtn.ghost{   background:#232222; border-color:var(--line); color:var(--ink) }
+.gbtn-ico{ display:inline-grid; place-items:center; width:1em; }
+
+/* 仅“出现”时做错位延时；隐藏时无延时，整齐退出 */
+.subtotalDock.show .dockActions .gbtn:nth-child(1){ transition-delay: calc(var(--dock-delay) + 0 * var(--dock-stagger)); }
+.subtotalDock.show .dockActions .gbtn:nth-child(2){ transition-delay: calc(var(--dock-delay) + 1 * var(--dock-stagger)); }
+.subtotalDock:not(.show) .dockActions .gbtn{ transition-delay: 0s !important; }
+
+.subtotalDock.show .gbtn{ opacity:1; transform: translateY(0) scale(1); }
 
 /* ========== Toast ========== */
 .toast{
-  position:fixed; left:50%;
+  position:fixed;
+  left:50%;
   bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 24px);
   transform:translateX(-50%) translateY(20px);
-  background:#0f2b1b; border:1px solid #1b5e38; color:#caffdd;
-  padding:10px 14px; border-radius:999px; box-shadow:var(--shadow);
-  opacity:0; pointer-events:none; transition:opacity var(--trans-slow), transform var(--trans-slow);
-  z-index:70;
+  background: rgba(15, 43, 27, 0.95);       /* 提高不透明度 */
+  border:1px solid #1b5e38;
+  color:#d7ffe9;                            /* 更亮的文字色 */
+  font-weight:600;                          /* 加粗更清晰 */
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);    /* 提升对比度 */
+  padding:10px 16px;
+  border-radius:999px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--trans-slow), transform var(--trans-slow);
+  z-index:1220;                              /* 保证在最顶 */
 }
-.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
 
 /* ========== 排名卡片 ========== */
 .rankHeader{ text-align:center; margin:4px 0 10px 0 }
@@ -241,347 +318,84 @@ th{color:#e8edf6; font-weight:600}
 /* ========== 其它细节 ========== */
 .remainInp:disabled{ opacity:.6; color:#fff; }
 
-
-/* 内部样式保持不变（如需） */
-.subtotalDock .dockInner{
-  display:flex; justify-content:space-between; align-items:center; gap:16px;
-  padding:12px 14px;
-  border:1px solid var(--chrome-line);
-  border-radius:50px;
-  background: var(--chrome-bg-blur);
-  backdrop-filter: blur(0 px);
-  box-shadow: var(--shadow);
-}
-
-/* ---- 统一变量：小计条高度与间距 ---- */
-:root{
-  --dock-h: 54px;     /* 小计条本身的可视高度（按你的样式大约 50~56） */
-  --dock-gap: 20px;   /* 小计条与底部四个按钮之间的垂直间距 */
-}
-
-/* 让页面底部为两块固定元素都预留空间（Tab + 小计条 + 间距） */
-.page{
-  padding-bottom: calc(
-    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
-  ) !important;
-}
-
-/* 小计条：放在 Tab 上方；层级低于 Tab，不挡点击；必要时再调 gap 即可 */
-.subtotalDock{
-  position: fixed;
-  left: 8px;
-  right: 8px;
-  bottom: calc(
-    var(--tabbar-h) + var(--tabbar-offset) + var(--dock-gap) + env(safe-area-inset-bottom)
-  ) !important;
-  z-index: 58;                /* tabbar 是 60，这里更低，不会遮挡 */
-  pointer-events: none;       /* 即使重叠也不会拦截点击 */
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity .35s var(--trans-slow), transform .15s var(--trans-slow);
-}
-.subtotalDock
-
-/* === 简约分段式 Tab（图标大、文字小、无厚重边框） === */
-.tabbar{
-  position: fixed;
-  left: 8px; right: 8px;
-  bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-offset));
-  z-index: 60;
-  display: flex; gap: 0; justify-content: space-between;
-  height: var(--tabbar-h);
-  padding: 0 10px;                    /* 内边距更轻 */
-  border-top: 1px solid var(--chrome-line);
-  background: var(--chrome-bg-blur);
-  backdrop-filter: blur(5px);
-  border-radius: 18px;                /* 容器轻圆角 */
-}
-
-/* 按钮本体：去掉全局按钮的边框和背景，做扁平 */
-.tabbtn{
-  position: relative;
-  flex: 1 1 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px;
-  padding: 10px 4px;
-  background: transparent !important;
-  border: none !important;            /* 覆盖全局 button 边框 */
-  box-shadow: none !important;
-  color: #cfd7e6;
-  font-size: 10px;                    /* 文字小而克制 */
-  min-width: 0;
-  transition: transform .12s ease, color .18s ease, background .18s ease;
-}
-
-/* 图标更大、更聚焦 */
+/* ====== 图标（底栏） ====== */
 .tabbtn .ico{
-  font-size: 26px;                    /* 图标主角 */
-  line-height: 1;
-  filter: saturate(.95) brightness(1.05);
-}
-
-/* 顶部细线指示选中（优雅，不喧宾） */
-.tabbtn::before{
-  content: "";
-  position: absolute;
-  left: 1%; right: 1%; top: 6px;
-  height: 3px; border-radius: 3px;
-  background: var(--accent);
-  opacity: 0; transform: scaleX(.4);
-  transition: transform .22s var(--trans-fast), opacity .22s var(--trans-fast);
-}
-.tabbtn.active{
-  color: #ffffff;
-}
-.tabbtn.active .ico{ filter: none; }
-.tabbtn.active::before{
-  opacity: 1;
-  transform: scaleX(1);
-}
-
-/* 轻分隔线：只在容器里做“列线”，不加卡片外框 */
-.tabbtn:not(:last-child)::after{
-  content: "";
-  position: absolute;
-  right: 0; top: 18px; bottom: 18px;
-  width: 1px; background: var(--chrome-line);
-  opacity: .6;
-}
-
-/* 触感反馈：悬停轻底色、按下轻微下沉（移动设备也自然） */
-@media (hover:hover){
-  .tabbtn:hover{ background: rgba(255,255,255,.02); }
-}
-.tabbtn:active{ transform: translateY(1px) scale(.99); }
-
-/* === Bomb Card 动画恢复与增强（与 app.js 的 pulseBomb 配合） === */
-
-/* 平滑动画需的 hint */
-.bombCard{ will-change: transform, box-shadow; }
-.bombValue{ will-change: transform, text-shadow; }
-
-/* 任何变更：更强的轻弹（加减或重置时通用） */
-.bombPulse{
-  animation: bombPulse .28s cubic-bezier(.22,.61,.36,1.05);
-}
-@keyframes bombPulse{
-  0%   { transform: scale(.96) }
-  60%  { transform: scale(1.03) }
-  100% { transform: scale(1) }
-}
-
-/* 增加炸弹：上抬 + 柔光 */
-.boomUp{
-  animation:
-    bombBumpUp .46s cubic-bezier(.22,.61,.36,1.05),
-    bombGlow   .80s ease-out;
-}
-@keyframes bombBumpUp{
-  0%   { transform: translateY(0) scale(1) }
-  40%  { transform: translateY(-6px) scale(1.03) }
-  100% { transform: translateY(0) scale(1) }
-}
-@keyframes bombGlow{
-  0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
-  50%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 30px rgba(90,20,20,.35), 0 0 22px rgba(255,120,120,.55) }
-  100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
-}
-
-/* 减少炸弹：轻摇动（带极小旋转） */
-.boomDown{
-  animation: bombShake .36s cubic-bezier(.36,.07,.19,.97);
-}
-@keyframes bombShake{
-  0%   { transform: translateX(0) rotate(0deg) }
-  20%  { transform: translateX(-4px) rotate(-0.6deg) }
-  50%  { transform: translateX( 4px) rotate( 0.6deg) }
-  80%  { transform: translateX(-3px) rotate(-0.4deg) }
-  100% { transform: translateX(0) rotate(0deg) }
-}
-
-/* 数字微动（与 bombPulse 同时触发时更有层次） */
-.bombValue.bombPulse{
-  animation: valueLift .28s cubic-bezier(.22,.61,.36,1.05);
-}
-@keyframes valueLift{
-  0%   { transform: translateY(0);   text-shadow: none }
-  50%  { transform: translateY(-3px); text-shadow: 0 2px 8px rgba(255,180,180,.45) }
-  100% { transform: translateY(0);   text-shadow: none }
-}
-
-/* 可选：按钮交互的轻反馈（不影响动画） */
-.bombBtns .btn{
-  transition: transform .12s ease, box-shadow .18s ease, opacity .18s ease;
-}
-.bombBtns .btn:hover{ box-shadow: 0 10px 24px rgba(120,30,30,.34) }
-.bombBtns .btn:active{ transform: scale(.98) }
-
-/* 顶部赢家选择：标签 + 扁平按钮（和全局 .btn 不冲突） */
-.winnerLabel{
-  font-size: 16px;
-  color: var(--muted);
-  margin-right: 8px;
-}
-#winnerQuick{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.winnerBtn{
-  background: transparent;
-  border-color: var(--line);
-  color: var(--ink);
-  padding: 8px 12px;
-  min-height: 36px;
-  border-radius: 999px;
-}
-.winnerBtn.accent{
-  background: #103b27;
-  border-color: #1f7b4f;
-  color: #d8ffe9;
-}
-
-/* 表格赢家行：绿色描边 + 淡绿底；禁用输入依旧清晰 */
-.winnerRow{
-  background: rgba(78, 198, 52, 0.08);
-}
-
-.winnerRow .remainInp:disabled{
-  opacity: .95; color: #635e5e; border-color: rgb(55, 61, 74);
-}
-
-/* 春天：输入类控件（input/checkbox/select等）被禁用时的灰化 */
-.winnerRow .springInp:disabled,
-.winnerRow .springSelect:disabled,
-.winnerRow .springChk:disabled {
-  opacity: .95;
-  color: #635e5e;
-  border-color: rgb(55, 61, 74);
-}
-
-/* 春天：若是按钮/徽标等非表单元素，用灰度+降不透明度 */
-.winnerRow .springBadge,
-.winnerRow .springBtn {
-  filter: grayscale(1);
-  opacity: .45;
-  pointer-events: none;    /* 赢家时不可点（如需） */
-}
-
-/* 极简线性图标：跟随 currentColor 着色、无填充、圆角端点 */
-.tabbtn .ico{
-  width: 32px; height: 32px;     /* 你也可以用 30–32，看手感 */
+  width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .tabbtn .ico svg{
   width: 100%; height: 100%;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  /* 轻微抗锯齿感觉 */
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
   shape-rendering: geometricPrecision;
 }
+.tabbtn { color: #cfd7e6; }
+.tabbtn.active { color: #ffffff; }
 
-/* 未选中更克制，选中更明亮（继承你已有的 .tabbtn/.active 颜色）*/
-.tabbtn { color: #cfd7e6; }            /* 如果你已有，就不必重复 */
-.tabbtn.active { color: #ffffff; }     /* 选中态自动让图标更亮 */
-
-/* ====== Bottom Tabs: 微信式选中（仅换主题色），更“窄”，图标略大 ====== */
-
-/* 让底栏看起来更“窄”：减小左右内边距与按钮内边距（不改全局高度变量） */
+/* ====== 微信式底栏微调（保留你原偏好） ====== */
 .tabbar{
-  padding: 0 6px !important;    /* 原 8~10，更贴边一些 */
+  padding: 0 6px !important;
   gap: 0 !important;
+  background: var(--surface-tabbar) !important;
+  border-color: var(--surface-tabbar-bd) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
 }
-
-/* 扁平按钮：未选中中性灰；选中只变主题色，不变背景/外框 */
 .tabbtn{
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: #cfd7e6 !important;    /* 未选中 */
-  padding: 6px 2px !important;  /* 原 8~10，整体更“薄” */
-  font-size: 12px !important;   /* 字号保持克制 */
+  color: #cfd7e6 !important;
+  padding: 6px 2px !important;
+  font-size: 12px !important;
   transition: color .18s ease, transform .12s ease !important;
 }
-
-/* 去掉顶部那条选中指示线（若之前存在） */
 .tabbtn::before{ display:none !important; }
-
-/* 选中：仅图标+文字使用主题色；不要背景块或描边 */
 .tabbtn.active{
   color: var(--accent) !important;
   background: transparent !important;
   border: none !important;
 }
-
-/* 图标稍微大一点，视觉中心更靠下，显得更“薄” */
 .tabbtn .ico{
   width: 30px !important;
-  height: 30px !important;      /* 原 26/28/36 之一，统一到 30 */
+  height: 30px !important;
   line-height: 1 !important;
-  filter: none !important;      /* 选中更干净 */
+  filter: none !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
-
-/* 若使用内联 SVG，跟随 currentColor 着色 */
 .tabbtn .ico svg{
-  width: 100% !important;
-  height: 100% !important;
-  stroke: currentColor !important;
-  fill: none !important;
-  stroke-width: 1.8 !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
+  width: 100% !important; height: 100% !important;
+  stroke: currentColor !important; fill: none !important;
+  stroke-width: 1.8 !important; stroke-linecap: round !important; stroke-linejoin: round !important;
 }
-
-/* 轻触感（可留可去） */
 @media (hover:hover){
   .tabbtn:hover{ background: transparent !important; }
 }
 .tabbtn:active{ transform: translateY(1px) scale(.99); }
 
-
+/* ====== 分层表面色（可选增强） ====== */
 :root{
-  /* 分层表面色（轻微区分） */
-  --surface-bg:        linear-gradient(180deg, var(--content-bg1), var(--content-bg2)); /* 页面背景 */
-  --surface-panel: rgba(16, 15, 15, 0.78);   /* 记分板/通用面板（中性、略亮） */
+  --surface-bg:        linear-gradient(180deg, var(--content-bg1), var(--content-bg2));
+  --surface-panel: rgba(16, 15, 15, 0.78);
   --surface-panel-bd: rgba(108, 117, 147, 0.24);
-
-  --surface-bomb:      linear-gradient(180deg,#44161b,#2a1013); /* 倍数卡片（暖） */
+  --surface-bomb:      linear-gradient(180deg,#44161b,#2a1013);
   --surface-bomb-bd: rgba(193, 145, 145, 0.34);
-
-  --surface-tabbar: rgba(71, 70, 70, 0.78);  /* 底部四按钮（冷） */
+  --surface-tabbar: rgba(71, 70, 70, 0.78);
   --surface-tabbar-bd: rgb(140, 139, 139);
-
-  /* 轻微色调差异点缀 */
   --ink-weak:  #d7e0ef;
   --muted-weak:#9fb0c9;
 }
-
-/* 页面背景：沿用你的背景，但确保引用统一变量（可选） */
-html{
-  background: var(--surface-bg);
-}
-
-/* 记分板/通用面板：更清晰的中性层 */
+html{ background: var(--surface-bg); }
 .panel{
   background: var(--surface-panel) !important;
   border-color: var(--surface-panel-bd) !important;
   box-shadow: 0 12px 30px rgba(53, 53, 57, 0.26);
 }
-
-/* 排名卡片等半透明容器也略提亮（可选） */
 .rankCard{
   background: rgba(53, 53, 62, 0.72);
   border-color: var(--surface-panel-bd);
 }
-
-/* 倍数卡片（暖调、与底栏明显区分） */
 .bombCard{
   background: var(--surface-bomb) !important;
   border-color: var(--surface-bomb-bd) !important;
@@ -592,56 +406,68 @@ html{
 }
 .bombLabel{ color:#ffdede }
 .bombValue{ color:#fff4f4 }
-
-/* 底部四按钮（冷调、变窄且与倍数区分） */
-.tabbar{
-  background: var(--surface-tabbar) !important;
-  border-color: var(--surface-tabbar-bd) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.28);
-  padding: 0 10px !important;   /* 维持更“窄”的观感 */
-}
-
-/* 未选中与选中颜色更有层级 */
 .tabbtn{ color: var(--ink-weak) !important; }
-.tabbtn.active{
-  color: var(--accent) !important;         /* 只换主题色，不加块状背景 */
-  text-shadow: 0 0 0 transparent;
+.tabbtn.active{ color: var(--accent) !important; text-shadow: 0 0 0 transparent; }
+
+/* ====== Bomb Card 动效（保留） ====== */
+.bombCard{ will-change: transform, box-shadow; }
+.bombValue{ will-change: transform, text-shadow; }
+.bombPulse{ animation: bombPulse .28s cubic-bezier(.22,.61,.36,1.05); }
+@keyframes bombPulse{ 0%{transform:scale(.96)} 60%{transform:scale(1.03)} 100%{transform:scale(1)} }
+.boomUp{
+  animation:
+    bombBumpUp .46s cubic-bezier(.22,.61,.36,1.05),
+    bombGlow   .80s ease-out;
+}
+@keyframes bombBumpUp{ 0%{ transform:translateY(0) scale(1)} 40%{ transform:translateY(-6px) scale(1.03)} 100%{ transform:translateY(0) scale(1)} }
+@keyframes bombGlow{
+  0%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
+  50%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 30px rgba(90,20,20,.35), 0 0 22px rgba(255,120,120,.55) }
+  100%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
+}
+.boomDown{ animation: bombShake .36s cubic-bezier(.36,.07,.19,.97); }
+@keyframes bombShake{
+  0%{ transform: translateX(0) rotate(0deg) }
+  20%{ transform: translateX(-4px) rotate(-.6deg) }
+  50%{ transform: translateX( 4px) rotate( .6deg) }
+  80%{ transform: translateX(-3px) rotate(-.4deg) }
+  100%{ transform: translateX(0) rotate(0deg) }
+}
+.bombValue.bombPulse{ animation: valueLift .28s cubic-bezier(.22,.61,.36,1.05); }
+@keyframes valueLift{
+  0%{ transform: translateY(0); text-shadow: none }
+  50%{ transform: translateY(-3px); text-shadow: 0 2px 8px rgba(255,180,180,.45) }
+  100%{ transform: translateY(0); text-shadow: none }
 }
 
-/* 小计浮条：与底栏同家族，但亮一号，提高可读性 */
-.subtotalDock .dockInner{
-  background: rgb(66, 65, 65);
-  border-color: var(--surface-tabbar-bd);
-  color: var(--ink);
+/* ====== 赢家行与“春天”禁用态 ====== */
+.winnerLabel{ font-size:16px; color: var(--muted); margin-right:8px; }
+#winnerQuick{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.winnerBtn{
+  background: transparent; border-color: var(--line); color: var(--ink);
+  padding: 8px 12px; min-height: 36px; border-radius: 999px;
+}
+.winnerBtn.accent{ background:#103b27; border-color:#1f7b4f; color:#d8ffe9; }
+.winnerRow{ background: rgba(78, 198, 52, 0.08); }
+.winnerRow .remainInp:disabled{ opacity: .95; color:#635e5e; border-color: rgb(55,61,74); }
+.winnerRow .springInp:disabled,
+.winnerRow .springSelect:disabled,
+.winnerRow .springChk:disabled{
+  opacity:.95; color:#635e5e; border-color: rgb(55,61,74);
+}
+.winnerRow .springBadge,
+.winnerRow .springBtn{
+  filter: grayscale(1);
+  opacity: .45;
+  pointer-events: none;
 }
 
-/* === 小计条：透明度 + 宽度可调（完全居中） === */
-:root{
-  --dock-alpha: .05;           /* 透明度 0~1，调大更实 */
-  --dock-maxw: 380px;          /* 最大宽度，可改 560/640 等 */
-  --dock-side-gap: 12px;       /* 小屏下两侧保留边距 */
-  --dock-h: 50px;              /* 高度，改数值可更矮/更高 */
+/* ====== 无障碍：减少动态 ====== */
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; animation: none !important; }
+  .subtotalDock{ opacity:1; transform:none; }
+  .dockActions, .gbtn{ opacity:1; transform:none; }
 }
-
-.subtotalDock{
-  left: 50% !important;
-  right: auto !important;
-  width: min(var(--dock-maxw), calc(100% - var(--dock-side-gap) * 2)) !important;
-  transform: translateX(-50%) translateY(8px) !important; /* 完全水平居中 */
-}
-
-/* 背景半透明，不影响文字 */
-.subtotalDock .dockInner{
-  background: rgba(16, 24, 36, var(--dock-alpha)) !important;
-  border-color: var(--surface-tabbar-bd) !important;
-  color: var(--ink) !important;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  padding: 12px 14px !important;
-  border-radius: 25px !important;
-}
-
-
 
 
 
