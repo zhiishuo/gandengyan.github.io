@@ -472,14 +472,5 @@ html{ background: var(--surface-bg); }
   pointer-events: none;
 }
 
-/* 1) 取消为小计条预留的大空隙（如果你前面定义过 dock-h / dock-gap） */
-:root{
-  --dock-h: 0px !important;
-  --dock-gap: 0px !important;
-}
 
-/* 2) 页面的底部只为 Tab 预留高度；不要再额外多留空间 */
-.page{
-  padding-bottom: calc(12px + var(--tabbar-h) + env(safe-area-inset-bottom)) !important;
-}
 
