@@ -596,7 +596,6 @@ function init(){
   const clearBtn = document.getElementById('clearHistory');
   if(clearBtn) clearBtn.addEventListener('click', clearHistory);
   const minusP = document.getElementById('minusP');
-  const minusP = document.getElementById('minusP');
   if(minusP) minusP.addEventListener('click', ()=> applyPlayerCount(N()-1));
   const plusP = document.getElementById('plusP');
   if(plusP) plusP.addEventListener('click', ()=> applyPlayerCount(N()+1));
