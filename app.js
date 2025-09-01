@@ -1,15 +1,16 @@
 /* ================== 状态 ================== */
 const LS_KEY = "gandengyan_scoreboard_mobile_full_v2_spring";
-// 本轮草稿（不入账前都保留）
-let roundDraft = { remain: [], springs: [] }; // remain[i]=数字|undefined；springs[i]=true|false
 const DRAFT_KEY = LS_KEY + "_roundDraft";
+
+let roundDraft = { remain: [], springs: [] }; // 仅草稿
 function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(roundDraft)); }catch(e){} }
 function loadDraft(){
   try{
     const s = localStorage.getItem(DRAFT_KEY);
-    if(s){ const d = JSON.parse(s); if(d && typeof d==='object'){ roundDraft = { remain: d.remain||[], springs: d.springs||[] }; } }
+    if(s){ const d = JSON.parse(s)||{}; roundDraft = { remain: d.remain||[], springs: d.springs||[] }; }
   }catch(e){}
 }
+
 let state = {
   players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
   history: [],
@@ -17,29 +18,71 @@ let state = {
   remainWinner: 0,
 };
 function N(){return state.players.length;}
-function save(){localStorage.setItem(LS_KEY, JSON.stringify(state));}
-function load(){const s=localStorage.getItem(LS_KEY); if(s){try{state=JSON.parse(s)}catch{}}}
-function mult(){return Math.pow(2, Math.max(0, +state.bombCount||0));}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(LS_KEY); if(s) state=JSON.parse(s); }catch(e){} }
+function mult(){ return Math.pow(2, Math.max(0, +state.bombCount||0)); }
 
-/* ================== 视图切换（仅点击，无横手势） ================== */
+/* ================== 视图切换 ================== */
 const pagesEl = document.getElementById('pages');
 const tabs = [...document.querySelectorAll('.tabbtn')];
 const pageIndex = { players:0, score:1, rank:2, history:3 };
-let current = 1; // 默认“记分”
-function go(tab){
-  const idx = pageIndex[tab] ?? 1;
-  current = idx;
-  pagesEl.style.transform = `translate3d(${-100*idx}%,0,0)`;
-  tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+let current = 1; // 默认记分
 
+// 仅保留“显示/隐藏”方案，避免依赖 CSS 横向滑屏布局
+function showOnly(tabKey){
+  if(!pagesEl) return;
+  const sections = pagesEl.querySelectorAll('.page');
+  sections.forEach(sec=>{
+    const show = (sec.dataset.page === tabKey);
+    sec.style.display = show ? 'block' : 'none';
+    sec.classList.toggle('active', show);
+  });
+  // 清除历史 transform，防止样式干扰
+  pagesEl.style.transform = '';
+}
+
+function stickDockToTab(){
+  const tab = document.querySelector('.tabbar');
   const dock = document.getElementById('subtotalDock');
-  if (dock) dock.classList.toggle('show', tab === 'score');
+  if(!tab || !dock) return;
+  const h = Math.ceil(tab.getBoundingClientRect().height || 64);
+  dock.style.bottom = `calc(${h}px + env(safe-area-inset-bottom))`;
+}
+
+function reserveBottomSpace() {
+  const root = document.documentElement;
+  const tab = document.querySelector('.tabbar');
+  const dock = document.getElementById('subtotalDock');
+
+  const tabH  = tab  ? Math.ceil(tab.getBoundingClientRect().height)  : 0;
+  const dockH = (dock && dock.classList.contains('show'))
+                 ? Math.ceil(dock.getBoundingClientRect().height)
+                 : 0;
+  const extra = 24;
+  root.style.setProperty('--reserved-bottom', (tabH + dockH + extra) + 'px');
+}
+
+// 统一的 go()
+function go(tabKey){
+  const idx = pageIndex[tabKey] ?? 1;
+  current = idx;
+
+  // 底部按钮高亮
+  tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tabKey));
+
+  // 仅显示对应页面
+  showOnly(tabKey);
+
+  // 小计浮条只在“记分”页显示
+  const dock = document.getElementById('subtotalDock');
+  if (dock) dock.classList.toggle('show', tabKey === 'score');
 
   stickDockToTab();
+  reserveBottomSpace();
 }
 tabs.forEach(b=> b.addEventListener('click', ()=> go(b.dataset.tab)));
 
-/* —— 切换赢家/模式等会重渲染，先把当前 DOM 写回草稿，避免丢失 —— */
+/* —— 切换赢家/模式等会重渲染，先把当前 DOM 写回草稿 —— */
 function snapshotRoundDraftFromDOM(){
   document.querySelectorAll('.remainInp').forEach(inp=>{
     const idx = +inp.dataset.idx;
@@ -54,22 +97,6 @@ function snapshotRoundDraftFromDOM(){
   });
   saveDraft();
 }
-
-/* 禁止横向滑动 */
-(function lockHorizontalSwipe(){
-  const vp = document.querySelector('.viewport');
-  if(!vp) return;
-  let sx=0, sy=0, locked=false;
-  vp.addEventListener('touchstart', (e)=>{
-    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; locked=false;
-  }, {passive:true});
-  vp.addEventListener('touchmove', (e)=>{
-    if(locked) { e.preventDefault(); return; }
-    const t=e.touches[0];
-    const dx=Math.abs(t.clientX - sx), dy=Math.abs(t.clientY - sy);
-    if(dx > dy + 4){ locked = true; e.preventDefault(); }
-  }, {passive:false});
-})();
 
 /* ================== 工具 ================== */
 function escapeHTML(s=''){
@@ -97,9 +124,13 @@ function pulseBomb(className='bombPulse'){
 
 /* ================== 玩家 ================== */
 function renderPlayers(){
-  document.getElementById('playerCountEcho').textContent = String(N());
-  document.getElementById('setP').value = String(N());
-  const tb = document.getElementById('playersBody'); tb.innerHTML="";
+  const cnt = document.getElementById('playerCountEcho');
+  const setP = document.getElementById('setP');
+  const tb = document.getElementById('playersBody');
+  if(cnt) cnt.textContent = String(N());
+  if(setP) setP.value = String(N());
+  if(!tb) return;
+  tb.innerHTML="";
   state.players.forEach((p,idx)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
@@ -115,10 +146,9 @@ function renderPlayers(){
   renderRank();
 }
 
-/* ================== 记分页：赢家按钮（仅按钮选择-用于 remain） ================== */
+/* ================== 记分页：赢家按钮（remain 模式） ================== */
 function renderQuickWinner(){
   const q = document.getElementById('winnerQuick'); if(!q) return;
-  // 标题 + 按钮容器
   q.innerHTML = `<span class="winnerLabel">赢家选择：</span>`;
   state.players.forEach((p,i)=>{
     const b = document.createElement('button');
@@ -131,6 +161,7 @@ function renderQuickWinner(){
       renderRemainArea();
       renderQuickWinner();
       recomputePreview();
+      reserveBottomSpace();
     });
     q.appendChild(b);
   });
@@ -154,88 +185,93 @@ function renderWinner1(){
   });
 }
 
-
-/* 春天/剩牌表格 */
+/* 春天/剩牌表格 + 手动输入表格 */
 function renderRemainArea(){
   snapshotRoundDraftFromDOM();
   loadDraft();
-  const rb = document.getElementById('remainBody'); if(!rb) return;
-  rb.innerHTML="";
-  state.players.forEach((p,i)=>{
-    const isW = (i===state.remainWinner);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
-      <td>
-        <input type="number" min="0" step="1" inputmode="numeric"
-          class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
-          placeholder="${isW?'赢家=0':'剩牌数'}">
-      </td>
-      <td>
-        <button class="btn springBtn" data-idx="${i}" ${isW?'disabled':''}>春天</button>
-      </td>`;
-    rb.appendChild(tr);
-    // 行配色：赢家行高亮；赢家之后的行加轻微底色区分
-    if (isW) tr.classList.add('winnerRow');
-    if (i > state.remainWinner) tr.classList.add('afterWinnerRow');
 
-    const inp = tr.querySelector('.remainInp');
-    if (roundDraft.remain[i] != null) {
-      inp.value = roundDraft.remain[i];
-    } else if (isW) {
-      inp.value = 0;
-    }
-    const btn = tr.querySelector('.springBtn');
-    if (roundDraft.springs[i]) btn.classList.add('accent');
-  });
+  // remain
+  const rb = document.getElementById('remainBody'); if(rb){
+    rb.innerHTML="";
+    state.players.forEach((p,i)=>{
+      const isW = (i===state.remainWinner);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
+        <td>
+          <input type="number" min="0" step="1" inputmode="numeric"
+            class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
+            placeholder="${isW?'赢家=0':'剩牌数'}">
+        </td>
+        <td>
+          <button class="btn springBtn" data-idx="${i}" ${isW?'disabled':''}>春天</button>
+        </td>`;
+      rb.appendChild(tr);
+      if (isW) tr.classList.add('winnerRow');
 
-  rb.querySelectorAll('.remainInp').forEach(inp=>{
-    inp.addEventListener('input', e=>{
-      const idx = +e.target.dataset.idx;
-      const raw = (e.target.value||'').trim();
-      roundDraft.remain[idx] = (raw==='' ? undefined : Math.max(0, Math.floor(Number(raw)||0)));
-      saveDraft();
-      recomputePreview();
+      const inp = tr.querySelector('.remainInp');
+      if (roundDraft.remain[i] != null) inp.value = roundDraft.remain[i];
+      else if (isW) inp.value = 0;
+
+      const btn = tr.querySelector('.springBtn');
+      if (roundDraft.springs[i]) btn.classList.add('accent');
     });
-  });
-  rb.querySelectorAll('.springBtn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(btn.disabled) return;
-      btn.classList.toggle('accent');
-      const idx = +btn.dataset.idx;
-      roundDraft.springs[idx] = btn.classList.contains('accent');
-      saveDraft();
-      recomputePreview();
-    });
-  });
 
-  const mb = document.getElementById('manualBody'); if(!mb) return;
-  mb.innerHTML="";
-  state.players.forEach((p,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
-    mb.appendChild(tr);
-  });
-  mb.querySelectorAll('.manualInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
+    rb.querySelectorAll('.remainInp').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const idx = +e.target.dataset.idx;
+        const raw = (e.target.value||'').trim();
+        roundDraft.remain[idx] = (raw==='' ? undefined : Math.max(0, Math.floor(Number(raw)||0)));
+        saveDraft();
+        recomputePreview();
+      });
+    });
+    rb.querySelectorAll('.springBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(btn.disabled) return;
+        btn.classList.toggle('accent');
+        const idx = +btn.dataset.idx;
+        roundDraft.springs[idx] = btn.classList.contains('accent');
+        saveDraft();
+        recomputePreview();
+      });
+    });
+  }
+
+  // manual
+  const mb = document.getElementById('manualBody'); if(mb){
+    mb.innerHTML="";
+    state.players.forEach((p,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
+      mb.appendChild(tr);
+    });
+    mb.querySelectorAll('.manualInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
+  }
 }
 
 /* ================== 记分计算/预览/入账 ================== */
 function switchMode(){
-  snapshotRoundDraftFromDOM();               // 切模式先保存草稿
-  const mode = document.getElementById('mode').value;
-  document.getElementById('modeRemain').style.display = (mode==='remain')?'block':'none';
-  document.getElementById('modeWinner1').style.display = (mode==='winner1')?'block':'none';
-  document.getElementById('modeManual').style.display = (mode==='manual')?'block':'none';
+  snapshotRoundDraftFromDOM();
+  const mode = document.getElementById('mode')?.value;
+  if(!mode) return;
+  const rem = document.getElementById('modeRemain');
+  const win1= document.getElementById('modeWinner1');
+  const man = document.getElementById('modeManual');
+  if(rem) rem.style.display = (mode==='remain')?'block':'none';
+  if(win1) win1.style.display = (mode==='winner1')?'block':'none';
+  if(man) man.style.display = (mode==='manual')?'block':'none';
   if(mode==='winner1') renderWinner1();
   recomputePreview();
+  reserveBottomSpace();
 }
 
 function computeRound(){
-  const mode = document.getElementById('mode').value;
+  const modeSel = document.getElementById('mode');
+  const mode = modeSel ? modeSel.value : 'remain';
   const n = N(), m = mult();
 
   if (mode==='remain'){
     const w = state.remainWinner;
-    // 完全基于 roundDraft 计算，避免 DOM 切换导致的瞬时空值
     const remain = Array(n).fill(0);
     const springMark = Array(n).fill(false);
 
@@ -263,7 +299,7 @@ function computeRound(){
   if(mode==='winner1'){
     const wl=document.getElementById('winnerList');
     const sel = wl ? wl.dataset.selected : undefined;
-    if(sel===undefined) return {error:"请选择胜者"};
+    if(sel===undefined || sel==="") return {error:"请选择胜者"};
     const idx=+sel, delta=Array(n).fill(0); delta[idx]=1*m;
     const payload = { mode:'winner1', winner: idx };
     return {delta, desc:`胜者：${state.players[idx].name}（+1×${m}）`, payload};
@@ -276,8 +312,7 @@ function computeRound(){
   for(const inp of inputs){
     const i=+inp.dataset.idx; const raw=(inp.value??"").trim(); const v=raw===""?0:Number(raw);
     if(!Number.isFinite(v)) return {error:"请输入数字"};
-    manualRaw[i]=v; // 未乘倍数
-    delta[i]=v*m;   // 乘倍数
+    manualRaw[i]=v; delta[i]=v*m;
   }
   const payload = { mode:'manual', manual: manualRaw };
   return {delta, desc:`手工输入 ×${m}`, payload};
@@ -296,7 +331,8 @@ function recomputePreview(){
   }
   const signs = res.delta.map((v,i)=>`${state.players[i].name}:${v>=0?'+':''}${v}`);
   if(box) box.textContent = signs.join('， ');
-  if (document.getElementById('mode').value==='remain'){
+  const mode = document.getElementById('mode')?.value || 'remain';
+  if (mode==='remain'){
     const w = state.remainWinner;
     if(pot) pot.textContent = `赢家（${state.players[w].name}）本轮预计：+${res.delta[w]}`;
     if(dockPot) dockPot.textContent = `+${res.delta[w]}`;
@@ -326,16 +362,16 @@ function commitRound(){
   // 1) 入账
   applyRound(res.delta, res.desc, res.payload);
 
-  // 2) 清理输入（开始新一轮）
+  // 2) 清理输入（新一轮）
   document.querySelectorAll('.remainInp').forEach(inp=>{ if(!inp.disabled) inp.value=""; });
   document.querySelectorAll('.springBtn').forEach(btn=>{ if(!btn.disabled) btn.classList.remove('accent'); });
   document.querySelectorAll('.manualInp').forEach(inp=> inp.value="");
   const wl=document.getElementById('winnerList'); if(wl) wl.dataset.selected="";
-  roundDraft = { remain: [], springs: [] }; // 仅在入账后清空草稿
+  roundDraft = { remain: [], springs: [] };
   saveDraft();
   recomputePreview();
 
-  // 3) 入账后炸弹自动清零
+  // 3) 炸弹清零
   const resetBtn = document.getElementById('bombReset');
   if (resetBtn) resetBtn.click();
   else { state.bombCount=0; updateBombUI(); save(); recomputePreview(); }
@@ -372,11 +408,9 @@ function deleteRound(idx){
 }
 function editRound(idx){
   const h = state.history[idx]; if(!h){ return; }
-  if(!h.payload){
-    alert('这条历史缺少可编辑数据（旧记录）。请手动删除后重新入账一次。');
-    return;
-  }
-  // 1) 回滚到该回合之前：重算前缀分数并截断历史
+  if(!h.payload){ alert('这条历史缺少可编辑数据（旧记录）。请手动删除后重新入账一次。'); return; }
+
+  // 1) 回滚到该回合之前
   state.players.forEach(p=> p.score = 0);
   for(let r=0; r<idx; r++){
     const hi = state.history[r];
@@ -395,17 +429,14 @@ function editRound(idx){
     roundDraft = { remain: [...(pl.remain||[])], springs: [...(pl.springs||[])] };
     saveDraft();
   } else if(pl.mode === 'winner1'){
-    roundDraft = { remain: [], springs: [] };
-    saveDraft();
+    roundDraft = { remain: [], springs: [] }; saveDraft();
     setTimeout(()=>{
       const wl = document.getElementById('winnerList');
       if(wl) wl.dataset.selected = String(pl.winner);
-      renderWinner1();
-      recomputePreview();
+      renderWinner1(); recomputePreview();
     }, 0);
   } else if(pl.mode === 'manual'){
-    roundDraft = { remain: [], springs: [] };
-    saveDraft();
+    roundDraft = { remain: [], springs: [] }; saveDraft();
     setTimeout(()=>{
       const inputs = [...document.querySelectorAll('.manualInp')];
       (pl.manual||[]).forEach((v,i)=>{ if(inputs[i]) inputs[i].value = String(v); });
@@ -437,7 +468,7 @@ function exportCsv(){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-/* ================== 实时排名 ================== */
+/* ================== 排名 ================== */
 function renderRank(){
   const box = document.getElementById('rankList'); if(!box) return;
   box.innerHTML="";
@@ -467,7 +498,7 @@ function renderRank(){
   });
 }
 
-/* ================== 炸弹交互（按钮） ================== */
+/* ================== 炸弹交互 ================== */
 function bindBombUI(){
   const dec = document.getElementById('bombDec');
   const inc = document.getElementById('bombInc');
@@ -506,7 +537,7 @@ function applyPlayerCount(newN){
     state.players.length=newN;
   }
   state.remainWinner=0;
-  roundDraft = { remain: [], springs: [] }; // 人数变化时清空草稿
+  roundDraft = { remain: [], springs: [] };
   saveDraft();
   renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory(); save(); recomputePreview();
 }
@@ -522,89 +553,70 @@ function showToast(text){
   toastTimer=setTimeout(()=> t.classList.remove('show'), 1500);
 }
 
-/* ================== Dock 紧贴Tab ================== */
-function stickDockToTab(){
-  const tab = document.querySelector('.tabbar');
-  const dock = document.getElementById('subtotalDock');
-  if(!tab || !dock) return;
-  const h = tab.getBoundingClientRect().height || 64;
-  dock.style.bottom = `calc(${h}px + env(safe-area-inset-bottom))`;
-}
-window.addEventListener('resize', stickDockToTab);
-
-
-// === 精确预留底部空间：Tab高度 + Dock高度 + 一点安全边距 ===
-function reserveBottomSpace() {
-  const root = document.documentElement;
-  const tab = document.querySelector('.tabbar');
-  const dock = document.getElementById('subtotalDock');
-
-  const tabH  = tab  ? Math.ceil(tab.getBoundingClientRect().height)  : 0;
-  const dockH = (dock && dock.classList.contains('show'))
-                 ? Math.ceil(dock.getBoundingClientRect().height)
-                 : 0;
-
-  // 额外给一点安全边距，避免阴影/圆角被压住
-  const extra = 24;
-
-  const total = tabH + dockH + extra;
-
-  root.style.setProperty('--reserved-bottom', total + 'px');
-}
-
-// 监听尺寸变化 & 软键盘/地址栏变化
-window.addEventListener('resize', reserveBottomSpace);
-
-// 当 Tab 或 Dock 尺寸/显隐变更时也重算
-const ro = new ResizeObserver(reserveBottomSpace);
-['.tabbar', '#subtotalDock'].forEach(sel => {
-  const el = document.querySelector(sel);
-  if (el) ro.observe(el);
-});
-
-function go(tab){
-  const idx = pageIndex[tab] ?? 1;
-  current = idx;
-  pagesEl.style.transform = `translate3d(${-100*idx}%,0,0)`;
-  tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
-
-  const dock = document.getElementById('subtotalDock');
-  if (dock) dock.classList.toggle('show', tab === 'score');
-
-  stickDockToTab();
-  reserveBottomSpace();  // ✅ 切页后重算
-}
 /* ================== 初始化 ================== */
 function init(){
   load();
   loadDraft();
-  go('score'); // 默认“记分”
+
+  // 初始：只显示“记分”页
+  showOnly('score');
+  go('score');
+
+  // 渲染
   renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory();
   bindBombUI(); switchMode(); updateBombUI(); recomputePreview();
+
+  // 粘贴 & 预留
   stickDockToTab();
   reserveBottomSpace();
 
   // 交互绑定
   const modeSel = document.getElementById('mode');
   if(modeSel) modeSel.addEventListener('change', switchMode);
+
   const commitBtn = document.getElementById('commit_m');
   if(commitBtn) commitBtn.addEventListener('click', commitRound);
+
   const undoBtn = document.getElementById('undo');
   if(undoBtn) undoBtn.addEventListener('click', undo);
+
   const exportBtn = document.getElementById('exportCsv');
   if(exportBtn) exportBtn.addEventListener('click', exportCsv);
+
   const clearBtn = document.getElementById('clearHistory');
   if(clearBtn) clearBtn.addEventListener('click', clearHistory);
+
   const minusP = document.getElementById('minusP');
   if(minusP) minusP.addEventListener('click', ()=> applyPlayerCount(N()-1));
+
   const plusP = document.getElementById('plusP');
   if(plusP) plusP.addEventListener('click', ()=> applyPlayerCount(N()+1));
+
   const applyP = document.getElementById('applyP');
-  if(applyP) applyP.addEventListener('click', ()=> applyPlayerCount(Number(document.getElementById('setP').value||N())));
+  if(applyP) applyP.addEventListener('click', ()=>{
+    const v = Number(document.getElementById('setP')?.value || N());
+    applyPlayerCount(v);
+  });
+
   const zeroBtn = document.getElementById('zeroScores');
   if(zeroBtn) zeroBtn.addEventListener('click', zeroScores);
+
   const resetBtn = document.getElementById('resetNames');
   if(resetBtn) resetBtn.addEventListener('click', resetNames);
+
+  // 监听尺寸变化 & 元素变化
+  window.addEventListener('resize', ()=>{
+    stickDockToTab();
+    reserveBottomSpace();
+  });
+  const ro = new ResizeObserver(()=>{
+    stickDockToTab();
+    reserveBottomSpace();
+  });
+  const tab = document.querySelector('.tabbar');
+  const dock = document.getElementById('subtotalDock');
+  if (tab) ro.observe(tab);
+  if (dock) ro.observe(dock);
 }
 init();
 
