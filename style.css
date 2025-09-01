@@ -100,7 +100,6 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   -webkit-overflow-scrolling: touch;
   /* 这条保留：底部为 Tab + 小计条 预留空间 */
   
-  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
 /* ========== 通用/面板/表格/输入 ========== */
