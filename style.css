@@ -478,6 +478,4 @@ html{ background: var(--surface-bg); }
   .dockActions, .gbtn{ opacity:1; transform:none; }
 }
 
-.pages .page { display: none; }
-.pages .page.active { display: block; }
 
