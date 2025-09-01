@@ -39,7 +39,10 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{
+  height: 100%;
+  overflow: hidden;   /* 关键：禁止 body 滚动 */
+}
 html,body { touch-action: manipulation; }
 
 html{
@@ -73,23 +76,29 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
 }
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
-/* ========== 视口容器 ========== */
 .viewport{
-  position:relative;
-  height:calc(130dvh - var(--tabbar-h) - var(--tabbar-offset));
-  overflow:hidden;
+  position: relative;
+  height: calc(100svh - var(--tabbar-h) - var(--tabbar-offset) - env(safe-area-inset-bottom));
+  overflow: hidden;           /* 只让里面滚 */
 }
-.pages{
-  height:100%; display:flex;
-  transform:translate3d(0,0,0);
-  transition:transform var(--trans-slow);
-  overscroll-behavior-x: contain;
-  touch-action: pan-y;
+
+/* 兼容不支持 svh 的浏览器 */
+@supports not (height: 100svh){
+  .viewport{
+    height: calc(100dvh - var(--tabbar-h) - var(--tabbar-offset) - env(safe-area-inset-bottom));
+  }
 }
+
+/* 内部容器和每页铺满视口高度，由每页自己滚动 */
+.pages{ height: 100%; }
 .page{
-  flex:0 0 100%;
-  padding: 16px 12px calc(16px + var(--tabbar-h) + var(--tabbar-offset) + env(safe-area-inset-bottom));
-  overflow:auto; -webkit-overflow-scrolling:touch;
+  height: 100%;
+  overflow: auto;             /* 仅这里滚动 */
+  -webkit-overflow-scrolling: touch;
+  /* 这条保留：底部为 Tab + 小计条 预留空间 */
+  padding-bottom: calc(
+    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
+  ) !important;
 }
 
 /* ========== 通用/面板/表格/输入 ========== */
