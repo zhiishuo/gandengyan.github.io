@@ -95,12 +95,9 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   height: 100%;
   overflow: auto;             /* 仅这里滚动 */
   -webkit-overflow-scrolling: touch;
-  /* 这条保留：底部为 Tab + 小计条 预留空间 */
-  padding-bottom: calc(
-    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
-  ) !important;
+  /* ✅ 用动态变量；兜底给个略大的值以防 JS 失效 */
+  padding-bottom: var(--reserved-bottom, 380px) !important;
 }
-
 /* ========== 通用/面板/表格/输入 ========== */
 .panel{
   background: var(--panel);
@@ -480,4 +477,8 @@ html{ background: var(--surface-bg); }
 
 
 
+#winnerPot{
+  color: var(--accent) !important;      /* 面板里那行“赢家本轮预计：+X” */
+  text-shadow: none;
+}
 
