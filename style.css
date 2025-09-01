@@ -99,9 +99,8 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   overflow: auto;             /* 仅这里滚动 */
   -webkit-overflow-scrolling: touch;
   /* 这条保留：底部为 Tab + 小计条 预留空间 */
-  padding-bottom: calc(
-    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
-  ) !important;
+  
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
 /* ========== 通用/面板/表格/输入 ========== */
