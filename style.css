@@ -6,9 +6,9 @@
   --chrome-line: rgba(27, 33, 80, 0.2);
 
   /* Content 区（中间页面背景 + 面板） */
-  --content-bg1: rgba(209, 201, 201, 0.42);
+  --content-bg1: rgba(158, 155, 155, 0.42);
   --content-bg2: #000000;
-  --panel: rgba(4, 22, 60, 0.92);
+  --panel: rgba(4, 221, 60, 0.92);
   --line: rgba(255, 255, 255, 0.24);
 
   /* 文本与状态色 */
@@ -130,6 +130,13 @@ th{color:#e8edf6; font-weight:600}
 .num{width:90px; text-align:right}
 :focus{ outline:none }
 :focus-visible{ outline:2px solid #3b82f6; outline-offset:2px }
+
+/* 预览列样式 */
+.previewCell{ text-align:center; }
+.previewVal{ font-weight:800; letter-spacing:.2px; }
+.previewVal.pos{ color:#16a34a; }   /* 正数：绿 */
+.previewVal.neg{ color:#f87171; }   /* 负数：红 */
+.previewVal.zero{ color:#cbd5e1; }  /* 0：灰 */
 
 /* ========== 底部 Tab ========== */
 .tabbar{
@@ -486,6 +493,7 @@ html{ background: var(--surface-bg); }
   opacity: .45;
   pointer-events: none;
 }
+
 
 
 
