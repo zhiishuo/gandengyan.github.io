@@ -6,8 +6,8 @@
   --chrome-line: rgba(27, 33, 80, 0.2);
 
   /* Content 区（中间页面背景 + 面板） */
-  --content-bg1: rgba(116, 119, 124, 0.42);
-  --content-bg2: #525355;
+  --content-bg1: rgba(209, 201, 201, 0.42);
+  --content-bg2: #000000;
   --panel: rgba(4, 22, 60, 0.92);
   --line: rgba(255, 255, 255, 0.24);
 
@@ -27,7 +27,7 @@
   /* 小计条尺寸/外观变量 */
   --dock-h: 50px;           /* 小计条视觉高度 */
   --dock-gap: 20px;         /* 与底部栏垂直间距（备选） */
-  --dock-alpha: .05;        /* 小计条内层半透明 */
+  --dock-alpha: .65;        /* 小计条内层半透明 */
   --dock-maxw: 560px;       /* 最大宽度 */
   --dock-side-gap: 12px;    /* 小屏留白 */
 
@@ -90,10 +90,10 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
 }
 
 /* 内部容器和每页铺满视口高度，由每页自己滚动 */
-.pages{ height: 97%; }
+.pages{ height: 100%; }
 .page{
-  height: 97%;
-  max-width: 700px;     /* 限制最大宽度，比如 720px */
+  height: 100%;
+
   margin: 0 auto;       /* 居中显示 */
 
   overflow: auto;             /* 仅这里滚动 */
@@ -248,7 +248,7 @@ th{color:#e8edf6; font-weight:600}
 /* 通用按钮外观 */
 .gbtn{
   display:inline-flex; align-items:center; gap:8px;
-  min-height:36px; padding:8px 12px;
+  min-height:36px; padding:12px 16px;
   border-radius:999px; font-size:14px; font-weight:600;
   border:1px solid var(--line); background:#0f1724; color:var(--ink);
   box-shadow: 0 4px 14px rgba(0,0,0,.16);
@@ -391,7 +391,7 @@ th{color:#e8edf6; font-weight:600}
   --surface-panel-bd: rgba(108, 117, 147, 0.24);
   --surface-bomb:      linear-gradient(180deg,#44161b,#2a1013);
   --surface-bomb-bd: rgba(193, 145, 145, 0.34);
-  --surface-tabbar: rgba(71, 70, 70, 0.78);
+  --surface-tabbar: rgba(205, 193, 193, 0.3);
   --surface-tabbar-bd: rgb(140, 139, 139);
   --ink-weak:  #d7e0ef;
   --muted-weak:#9fb0c9;
