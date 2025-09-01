@@ -438,7 +438,7 @@ html{ background: var(--surface-bg); }
 @keyframes bombShake{
   0%{ transform: translateX(0) rotate(0deg) }
   20%{ transform: translateX(-4px) rotate(-.6deg) }
-  50%{ transform: translateX( 4px) rotate( .6deg) }
+  50%{ transform: translateX( 41px) rotate( .6deg) }
   80%{ transform: translateX(-3px) rotate(-.4deg) }
   100%{ transform: translateX(0) rotate(0deg) }
 }
@@ -478,4 +478,6 @@ html{ background: var(--surface-bg); }
   .dockActions, .gbtn{ opacity:1; transform:none; }
 }
 
+.pages .page { display: none; }
+.pages .page.active { display: block; }
 
