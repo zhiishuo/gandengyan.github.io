@@ -204,7 +204,8 @@ function renderRemainArea(){
         </td>
         <td>
           <button class="btn springBtn" data-idx="${i}" ${isW?'disabled':''}>春天</button>
-        </td>`;
+      </td>
+      <td class="previewCell mono" data-idx="${i}">—</td>`;
       rb.appendChild(tr);
       if (isW) tr.classList.add('winnerRow');
 
@@ -340,6 +341,15 @@ function recomputePreview(){
     if(pot) pot.textContent='';
     if(dockPot) dockPot.textContent = '+0';
   }
+  // 更新每行预览列
+    if(res && res.delta){
+      document.querySelectorAll('.previewCell').forEach(td=>{
+        const idx = +td.dataset.idx;
+        const v = res.delta[idx] || 0;
+        td.textContent = (v>=0? '+' : '') + v;
+        td.style.color = v>0 ? 'limegreen' : (v<0 ? '#f87171' : '#ccc');
+      });
+    }
 }
 
 function applyRound(delta, desc, payload){
