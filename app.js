@@ -103,23 +103,35 @@ function escapeHTML(s=''){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ================== 公共渲染 ================== */
 function updateBombUI(){
   const m = mult();
-  const text = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 小徽章上的文字（如果有）
   const mini = document.getElementById('badgeMini');
-  const bombValue = document.getElementById('bombValue');
-  if(mini) mini.textContent = text;
-  if(bombValue) bombValue.textContent = text;
+  if(mini) mini.textContent = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 主显示：只更新内部的两个 span，不要覆盖整个 bombValue
+  const bcEcho = document.getElementById('bombCountEcho');
+  const multEcho = document.getElementById('multEcho');
+  if(bcEcho)  bcEcho.textContent  = String(state.bombCount);
+  if(multEcho) multEcho.textContent = String(m);
+
+  // 底部小计上的倍数
   const dockMult = document.getElementById('dockMult');
-  if(dockMult) dockMult.textContent = '×'+m;
-}
-function pulseBomb(className='bombPulse'){
-  const card = document.getElementById('bombCard');
-  if(!card) return;
-  card.classList.remove('bombPulse','boomUp','boomDown');
-  void card.offsetWidth;
-  card.classList.add(className);
+  if(dockMult) dockMult.textContent = '×' + m;
+
+  // 🔥 火焰大小/透明度随炸弹数增长
+  const flame = document.getElementById('flame');
+  if(flame){
+    if(state.bombCount > 0){
+      const s = Math.min(1 + state.bombCount * 0.18, 2.2); // 最大放大到 2.2
+      flame.style.display  = 'block';
+      flame.style.transform = `scale(${s})`;
+      flame.style.opacity   = String(Math.min(0.5 + state.bombCount * 0.12, 1));
+    }else{
+      flame.style.display = 'none';
+    }
+  }
 }
 
 /* ================== 玩家 ================== */
@@ -133,7 +145,7 @@ function renderPlayers(){
   tb.innerHTML="";
   state.players.forEach((p,idx)=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
+    tr.innerHTML = `<td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
     tb.appendChild(tr);
   });
   tb.querySelectorAll('input.name').forEach(inp=>{
@@ -196,7 +208,7 @@ function renderRemainArea(){
     state.players.forEach((p,i)=>{
       const isW = (i===state.remainWinner);
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
+      tr.innerHTML = `<td>${escapeHTML(p.name)}</td>
         <td>
           <input type="number" min="0" step="1" inputmode="numeric"
             class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
@@ -243,7 +255,7 @@ function renderRemainArea(){
     mb.innerHTML="";
     state.players.forEach((p,i)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
+      tr.innerHTML = `<td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
       mb.appendChild(tr);
     });
     mb.querySelectorAll('.manualInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
@@ -398,8 +410,8 @@ function renderHistory(){
   state.history.forEach((h,ri)=>{
     const tr = document.createElement('tr');
     const detail = h.delta.map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`).join('， ');
-    tr.innerHTML = `<td>${ri+1}</td>
-      <td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
+
+     tr.innerHTML = `<td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
       <td>
         <button class="btn" data-edit="${ri}">编辑</button>
         <button class="btn" data-del="${ri}">删除</button>
@@ -562,7 +574,53 @@ function showToast(text){
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=> t.classList.remove('show'), 1500);
 }
+function updateBombUI(){
+  const m = mult();
 
+  // 小徽章上的文字
+  const mini = document.getElementById('badgeMini');
+  if(mini) mini.textContent = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 主显示
+  const bcEcho = document.getElementById('bombCountEcho');
+  const multEcho = document.getElementById('multEcho');
+  if(bcEcho)  bcEcho.textContent  = String(state.bombCount);
+  if(multEcho) multEcho.textContent = String(m);
+
+  // 底部小计
+  const dockMult = document.getElementById('dockMult');
+  if(dockMult) dockMult.textContent = '×' + m;
+
+  // 💣 炸弹 logo 动画
+// 💣 炸弹 logo 分阶段效果
+const bombIcon = document.getElementById('bombIcon');
+if (bombIcon){
+  const c = state.bombCount;
+  // 放大规则：基础 1，按数量线性放大，上限可自行调高或取消
+  const scale = Math.min(1 + c * 0.2, 4.5);   // 想无限大：改成 1 + c*0.2
+
+  // 统一先清理
+  bombIcon.classList.remove('stage1','stage2','stage3','bombShaking');
+  bombIcon.style.setProperty('--bombScale', scale);
+
+  if (c > 0){
+    // 抖动开启
+    bombIcon.classList.add('bombShaking');
+
+    // 分阶段打标签
+    if (c <= 3){
+      bombIcon.classList.add('stage1');
+    } else if (c <= 6){
+      bombIcon.classList.add('stage2');
+    } else {
+      bombIcon.classList.add('stage3'); // 含闪烁
+    }
+  }else{
+    // 归零：不抖、不闪
+    bombIcon.style.setProperty('--bombScale', 1);
+  }
+}
+}
 /* ================== 初始化 ================== */
 function init(){
   load();
@@ -629,6 +687,7 @@ function init(){
   if (dock) ro.observe(dock);
 }
 init();
+
 
 
 
