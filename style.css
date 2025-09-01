@@ -12,7 +12,7 @@
   --line: rgba(255, 255, 255, 0.24);
 
   /* 文本与状态色 */
-  --ink:#f6f8fb; --muted: #949eac;
+  --ink:#f6f8fb; --muted: #e0e4ee;
   --accent:#29d076; --warn:#ef4444; --info:#58c7f3;
 
   --shadow: 0 12px 30px rgba(0,0,0,.24);
@@ -173,11 +173,11 @@ th{color:#e8edf6; font-weight:600}
 
 /* ========== 炸弹卡 ========== */
 .bombCard{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
-  border-radius:14px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  border-radius:24px;
   background: linear-gradient(180deg,#3a1216,#241014);
   border:1px solid rgba(197, 0, 0, 0.28);
-  padding:18px 12px; text-align:center;
+  padding:24px 12px; text-align:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22);
 }
 .bombLabel{ font-size:13px; color:#ffd8d8; display:flex; align-items:center; gap:6px; letter-spacing:.2px }
@@ -187,7 +187,80 @@ th{color:#e8edf6; font-weight:600}
   min-width:98px; min-height:72px; font-size:26px; font-weight:800; border-radius:100px;
 }
 #bombDec, #bombInc{ background:#2b0f12; border-color:#7a2d2d; color:#ffe2e2 }
-#bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede }
+#bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede ; margin-inline-end: 30px;}
+
+
+/* —— Bomb buttons: make +/- circular, keep Reset pill —— */
+.bombBtns{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 圆形按钮：+ / - */
+#bombDec,
+#bombInc{
+  /* 覆盖通用按钮的最小尺寸，确保是正圆 */
+  width: 74px;
+  height: 74px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+
+  /* 强化 +/- 符号的视觉权重 */
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -2px;
+  text-shadow: 0 1px 6px rgba(255, 210, 210, .25);
+
+  /* 立体感与过渡 */
+  box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+/* 点击反馈 */
+#bombDec:active,
+#bombInc:active{
+  transform: translateY(1px) scale(.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+/* 细微的色差，让两者一眼可分（可按喜好调） */
+#bombInc{
+  background: #2d1216;   /* 比减号略亮一点 */
+  border-color: #8a3434;
+}
+#bombDec{
+  background: #230d10;
+  border-color: #6f2a2a;
+}
+
+/* 重置维持胶囊形状，仅略微增强可读性 */
+#bombReset{
+  padding: 12px 18px;          /* 保持原形状 */
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-shadow: 0 1px 4px rgba(255, 220, 220, .18);
+}
+
+/* 可达性：键盘焦点高亮 */
+#bombDec:focus-visible,
+#bombInc:focus-visible,
+#bombReset:focus-visible{
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 小屏时略缩尺寸，仍保持正圆与清晰度 */
+@media (max-width: 380px){
+  #bombDec, #bombInc{ width: 66px; height: 66px; font-size: 34px; }
+}
 
 /* ========== 小计浮条（统一后的唯一版本） ========== */
 /* 外层：不接事件，放在底栏上方；出现/消失统一节奏 */
@@ -454,22 +527,38 @@ html{ background: var(--surface-bg); }
   100%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(90,20,20,.28), 0 0 0 rgba(255,120,120,0) }
 }
 /* 下降时的轻微抖动（更克制） */
-.boomDown{
-  animation: bombShake .26s cubic-bezier(.36,.07,.19,.97);
+ .boomDown{
+   animation: bombShake .26s cubic-bezier(.36,.07,.19,.97);
+ }
+
+/* === Card-level pulses used by JS (cardPulseUp / cardPulseDown / cardPulse) === */
+.bombCard.cardPulseUp   { animation: cardPulseUp .32s ease-out; }
+.bombCard.cardPulseDown { animation: cardPulseDown .24s ease-out; }
+.bombCard.cardPulse     { animation: cardPulse .28s ease-out; }
+
+@keyframes cardPulseUp {
+  0%   { transform: translateZ(0) scale(1); }
+  45%  { transform: translateZ(0) scale(1.04); }
+  100% { transform: translateZ(0) scale(1); }
+}
+@keyframes cardPulseDown {
+  0%   { transform: translateZ(0) scale(1); }
+  50%  { transform: translateZ(0) scale(0.97); }
+  100% { transform: translateZ(0) scale(1); }
+}
+@keyframes cardPulse {
+  0%   { transform: translateZ(0) scale(1); }
+  50%  { transform: translateZ(0) scale(1.04); }
+  100% { transform: translateZ(0) scale(1); }
 }
 
+/* === Missing keyframes for .boomDown (was referencing bombShake) === */
 @keyframes bombShake{
-  0%   { transform: translateX(0) rotate(0deg) }
-  20%  { transform: translateX(-10px) rotate(-.2deg) }
-  50%  { transform: translateX( 8px) rotate( .2deg) }
-  80%  { transform: translateX(-5px) rotate(-.1deg) }
-  100% { transform: translateX(0) rotate(0deg) }
-}
-.bombValue.bombPulse{ animation: valueLift .28s cubic-bezier(.22,.61,.36,1.05); }
-@keyframes valueLift{
-  0%{ transform: translateY(0); text-shadow: none }
-  50%{ transform: translateY(-3px); text-shadow: 0 2px 8px rgba(255,180,180,.45) }
-  100%{ transform: translateY(0); text-shadow: none }
+  0%   { transform: translateX(0) translateY(0)   scale(1); }
+  25%  { transform: translateX(-1px) translateY(1px)  scale(0.996); }
+  50%  { transform: translateX(1px)  translateY(-1px) scale(1.004); }
+  75%  { transform: translateX(-1px) translateY(-1px) scale(0.998); }
+  100% { transform: translateX(0) translateY(0)   scale(1); }
 }
 
 /* ====== 赢家行与“春天”禁用态 ====== */
@@ -494,6 +583,160 @@ html{ background: var(--surface-bg); }
   pointer-events: none;
 }
 
+/* 只给 emoji 自己做动画，避免影响父级卡片的动画 */
+#bombIcon{
+  display:inline-block;
+  font-size:24px;
+  margin-right:6px;
+  transform-origin:center center;
+  will-change: transform, filter, opacity;
+  --bombScale: 1;   /* JS 会设置 */
+  --shakeDur: .28s; /* 抖动周期 */
+}
+
+/* 抖动（常驻）—— 注意仅作用于 #bombIcon，不会覆盖 .bombCard 的动画 */
+@keyframes bombIconShake {
+  0%   { transform: translate(0,0)           rotate(0deg)  scale(var(--bombScale)); }
+  25%  { transform: translate(-1px, 1px)     rotate(-6deg) scale(var(--bombScale)); }
+  50%  { transform: translate( 1px,-1px)     rotate(6deg)  scale(var(--bombScale)); }
+  75%  { transform: translate(-1px,-1px)     rotate(-4deg) scale(var(--bombScale)); }
+  100% { transform: translate( 1px, 1px)     rotate(4deg)  scale(var(--bombScale)); }
+}
+.bombShaking{ animation: bombIconShake var(--shakeDur) infinite; }
+
+/* 阶段效果：红色辉光 + 更快抖动 + 闪烁 */
+.stage1{ --shakeDur:.28s; filter: drop-shadow(0 0 0 rgba(255,0,0,0)); }
+.stage2{ --shakeDur:.20s; filter: drop-shadow(0 0 4px rgba(255,80,80,.7)) drop-shadow(0 0 10px rgba(255,120,120,.45)); }
+@keyframes bombBlink { 0%{opacity:1} 100%{opacity:.65} }
+.stage3{
+  --shakeDur:.14s;
+  filter: drop-shadow(0 0 6px rgba(255,60,60,.9)) drop-shadow(0 0 16px rgba(255,120,120,.6));
+  animation: bombIconShake var(--shakeDur) infinite, bombBlink .55s infinite alternate;
+}
+
+/* —— Enhancements: make +/- more prominent with hover glow, tap pop, and ripple —— */
+
+/* 视觉权重 & 质感：更粗边、更饱和、叠加高光渐变 */
+#bombDec,
+#bombInc{
+  position: relative;                  /* 供涟漪定位 */
+  border-width: 2px;
+  background-image:
+    radial-gradient(160% 120% at 50% -30%, rgba(255,255,255,.06), transparent 50%),
+    linear-gradient(180deg, rgba(255,120,120,.10), rgba(0,0,0,0));
+  filter: saturate(1.02) contrast(1.02);
+  color:#fff5f5;
+  text-shadow: 0 2px 8px rgba(255, 160, 160, .35);
+}
+
+/* “+” 比 “−” 略亮，区分一眼可见 */
+#bombInc{
+  background-color: rgba(200, 83, 51, 0.34);      /* 增强亮度 */
+  border-color: #a84646;
+}
+#bombDec{
+  background-color: rgb(111, 45, 35);
+  border-color: #a24444;
+}
+
+/* Hover / Focus：轻浮起 + 柔光 */
+@media (hover:hover){
+  #bombDec:hover,
+  #bombInc:hover{
+    box-shadow:
+      0 10px 28px rgba(0,0,0,.35),
+      0 0 14px rgba(255, 140, 140, .30),
+      inset 0 0 0 1px rgba(255,255,255,.06);
+    transform: translateY(-1px) scale(1.015);
+  }
+}
+#bombDec:focus-visible,
+#bombInc:focus-visible{
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.35),
+    0 0 14px rgba(88, 199, 243, .24),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* Tap Pop：按下的微弹跳（比原本 :active 更有存在感） */
+#bombDec:active,
+#bombInc:active{
+  animation: btnTap .22s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes btnTap{
+  0%   { transform: translateY(1px) scale(.98); }
+  60%  { transform: translateY(0)   scale(1.03); }
+  100% { transform: translateY(0)   scale(1.00); }
+}
+
+/* Ripple：点击时的淡淡涟漪 */
+#bombDec::after,
+#bombInc::after{
+  content:'';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(40% 40% at center, rgba(255,200,200,.30), rgba(255,120,120,.00) 70%);
+  opacity: 0;
+  transform: scale(.6);
+  transition: opacity .24s ease, transform .24s ease;
+  pointer-events: none;
+}
+#bombDec:active::after,
+#bombInc:active::after{
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/*（可选）当有炸弹时让按钮轻微“呼吸”，与卡片发光呼应 */
+.bombCard.bombGlowing #bombInc,
+.bombCard.bombGlowing #bombDec{
+  animation: btnBreath 2.8s ease-in-out infinite;
+}
+@keyframes btnBreath{
+  0%,100% { filter: saturate(1.02) brightness(1.00); }
+  50%     { filter: saturate(1.10) brightness(1.04); }
+}
 
 
+/* ====== Players table row numbering (no JS change needed) ====== */
+/* Use CSS counters to render 1,2,3... before the first cell in each row of #playersBody */
+.page[data-page="players"] #playersBody{ counter-reset: playerRow; }
+.page[data-page="players"] #playersBody tr{ counter-increment: playerRow; }
 
+/* Reserve space on the first cell and draw the index badge */
+.page[data-page="players"] #playersBody td:first-child{
+  position: relative;
+  padding-left: 46px;               /* space for the index badge */
+}
+.page[data-page="players"] #playersBody td:first-child::before{
+  content: counter(playerRow);
+  position: absolute;
+  left: 10px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  font-weight: 800;
+  font-family: ui-monospace,Menlo,Consolas,monospace;
+  letter-spacing: .2px;
+
+  /* visuals in your current theme */
+  color: #e8edf6;
+  background: #0f1520;
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,.22);
+}
+
+/* (Optional) show a small '序号' label in the header's first cell, if present */
+.page[data-page="players"] table thead th:first-child{
+  position: relative;
+  padding-left: 46px;
+}
+.page[data-page="players"] table thead th:first-child::before{
+  content: '序号';
+  position: absolute;
+  left: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 600;
+}

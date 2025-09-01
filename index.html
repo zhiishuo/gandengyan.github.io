@@ -19,7 +19,7 @@
 
 <!-- 预览列样式（正绿/负红/零灰） -->
 <style>
-  .previewCell{ text-align:right11111; }
+  .previewCell{ text-align:center; }
   .previewVal{ font-weight:800; letter-spacing:.2px; }
   .previewVal.pos{ color:#16a34a; }   /* 正数：绿 */
   .previewVal.neg{ color:#f87171; }   /* 负数：红 */
@@ -44,7 +44,7 @@
             <button class="btn accent" id="applyP">应用人数</button>
           </div>
           <table style="margin-top:8px">
-            <thead><tr><th>#</th><th>玩家名</th><th>分</th></tr></thead>
+            <thead><tr><th>玩家名</th><th>分</th></tr></thead>
             <tbody id="playersBody"></tbody>
           </table>
           <div class="flex" style="margin-top:8px">
@@ -59,11 +59,14 @@
         <div class="panel">
           <!-- 红色炸弹卡（仅加/减/重置） -->
           <div class="bombCard" id="bombCard">
-            <div class="bombValue mono" id="bombValue">💣 炸弹 0 ｜ 倍数 ×1</div>
+            <div class="bombValue mono" id="bombValue">
+              <span id="bombIcon">💣</span>
+               炸弹 <span id="bombCountEcho">0</span> ｜ 倍数 ×<span id="multEcho">1</span>
+            </div>
             <div class="bombBtns">
+                <button class="btn" id="bombReset">重置</button>
               <button class="btn" id="bombDec">－</button>
               <button class="btn" id="bombInc">＋</button>
-              <button class="btn" id="bombReset">重置</button>
             </div>
           </div>
 
@@ -84,7 +87,7 @@
           <!-- 剩牌 / 春天（每行春天=单按钮） -->
           <div id="modeRemain" style="margin-top:8px">
             <table>
-              <thead><tr><th>#</th><th>玩家</th><th>剩牌</th><th>春天</th><th>预览</th></tr></thead>
+              <thead><tr><th>玩家</th><th>剩牌</th><th>春天</th><th>预览</th></tr></thead>
               <tbody id="remainBody"></tbody>
             </table>
           </div>
@@ -98,7 +101,7 @@
           <!-- 手工输入 -->
           <div id="modeManual" style="display:none; margin-top:8px">
             <table>
-              <thead><tr><th>#</th><th>玩家</th><th>分</th></tr></thead>
+              <thead><tr><th>玩家</th><th>分</th></tr></thead>
               <tbody id="manualBody"></tbody>
             </table>
           </div>
@@ -132,7 +135,7 @@
         <div class="panel">
           <h2>回合历史</h2>
           <table>
-            <thead><tr><th>#</th><th>明细</th><th>操作</th></tr></thead>
+            <thead><tr><th>明细</th><th>操作</th></tr></thead>
             <tbody id="historyBody"></tbody>
           </table>
           <div class="flex" style="margin-top:8px">

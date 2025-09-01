@@ -103,23 +103,35 @@ function escapeHTML(s=''){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ================== 公共渲染 ================== */
 function updateBombUI(){
   const m = mult();
-  const text = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 小徽章上的文字（如果有）
   const mini = document.getElementById('badgeMini');
-  const bombValue = document.getElementById('bombValue');
-  if(mini) mini.textContent = text;
-  if(bombValue) bombValue.textContent = text;
+  if(mini) mini.textContent = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 主显示：只更新内部的两个 span，不要覆盖整个 bombValue
+  const bcEcho = document.getElementById('bombCountEcho');
+  const multEcho = document.getElementById('multEcho');
+  if(bcEcho)  bcEcho.textContent  = String(state.bombCount);
+  if(multEcho) multEcho.textContent = String(m);
+
+  // 底部小计上的倍数
   const dockMult = document.getElementById('dockMult');
-  if(dockMult) dockMult.textContent = '×'+m;
-}
-function pulseBomb(className='bombPulse'){
-  const card = document.getElementById('bombCard');
-  if(!card) return;
-  card.classList.remove('bombPulse','boomUp','boomDown');
-  void card.offsetWidth;
-  card.classList.add(className);
+  if(dockMult) dockMult.textContent = '×' + m;
+
+  // 🔥 火焰大小/透明度随炸弹数增长
+  const flame = document.getElementById('flame');
+  if(flame){
+    if(state.bombCount > 0){
+      const s = Math.min(1 + state.bombCount * 0.18, 2.2); // 最大放大到 2.2
+      flame.style.display  = 'block';
+      flame.style.transform = `scale(${s})`;
+      flame.style.opacity   = String(Math.min(0.5 + state.bombCount * 0.12, 1));
+    }else{
+      flame.style.display = 'none';
+    }
+  }
 }
 
 /* ================== 玩家 ================== */
@@ -133,7 +145,7 @@ function renderPlayers(){
   tb.innerHTML="";
   state.players.forEach((p,idx)=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${idx+1}</td><td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
+    tr.innerHTML = `<td><input class="name" value="${escapeHTML(p.name)}" data-idx="${idx}"/></td><td class="mono">${p.score}</td>`;
     tb.appendChild(tr);
   });
   tb.querySelectorAll('input.name').forEach(inp=>{
@@ -196,7 +208,7 @@ function renderRemainArea(){
     state.players.forEach((p,i)=>{
       const isW = (i===state.remainWinner);
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td>
+      tr.innerHTML = `<td>${escapeHTML(p.name)}</td>
         <td>
           <input type="number" min="0" step="1" inputmode="numeric"
             class="num mono remainInp" data-idx="${i}" ${isW?'disabled':''}
@@ -243,7 +255,7 @@ function renderRemainArea(){
     mb.innerHTML="";
     state.players.forEach((p,i)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
+      tr.innerHTML = `<td>${escapeHTML(p.name)}</td><td><input class="num mono manualInp" data-idx="${i}" placeholder="0"></td>`;
       mb.appendChild(tr);
     });
     mb.querySelectorAll('.manualInp').forEach(inp=> inp.addEventListener('input', recomputePreview));
@@ -360,6 +372,34 @@ function applyRound(delta, desc, payload){
   save();
 }
 
+// 一次性动画触发器：给 #bombIcon（或 #flame）加/去类名，重触发 keyframes
+function pulseBomb(kind = 'bombPulse'){
+  const icon = document.getElementById('bombIcon') || document.getElementById('flame');
+  if(!icon) return;
+
+  // 1) 先移除同名类，强制重排，再加回去，确保每次都能重新触发动画
+  icon.classList.remove(kind);
+  void icon.offsetWidth;           // 强制重排（reflow）
+  icon.classList.add(kind);
+
+  // 2) 动画结束后把一次性类移除，避免堆积（时长与你 CSS keyframes 匹配）
+  setTimeout(()=> icon.classList.remove(kind), 500);
+
+  // （可选）让整张炸弹卡一起脉冲
+  const card = icon.closest('.bombCard');
+  if(card){
+    const cardKind = kind === 'boomUp'   ? 'cardPulseUp'
+                   : kind === 'boomDown' ? 'cardPulseDown'
+                   : /* 'bombPulse' */     'cardPulse';   // 新增
+    if(cardKind){
+      card.classList.remove(cardKind);
+      void card.offsetWidth;
+      card.classList.add(cardKind);
+      setTimeout(()=> card.classList.remove(cardKind), 500);
+    }
+  }
+}
+
 function commitRound(){
   const prevBomb = state.bombCount;
   const res = computeRound();
@@ -398,8 +438,8 @@ function renderHistory(){
   state.history.forEach((h,ri)=>{
     const tr = document.createElement('tr');
     const detail = h.delta.map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`).join('， ');
-    tr.innerHTML = `<td>${ri+1}</td>
-      <td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
+
+     tr.innerHTML = `<td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
       <td>
         <button class="btn" data-edit="${ri}">编辑</button>
         <button class="btn" data-del="${ri}">删除</button>
@@ -508,6 +548,8 @@ function renderRank(){
   });
 }
 
+
+
 /* ================== 炸弹交互 ================== */
 function bindBombUI(){
   const dec = document.getElementById('bombDec');
@@ -562,7 +604,46 @@ function showToast(text){
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=> t.classList.remove('show'), 1500);
 }
+function updateBombUI(){
+  const m = mult();
 
+  // 小徽章上的文字
+  const mini = document.getElementById('badgeMini');
+  if(mini) mini.textContent = `炸弹 ${state.bombCount} ｜ 倍数 ×${m}`;
+
+  // 主显示
+  const bcEcho = document.getElementById('bombCountEcho');
+  const multEcho = document.getElementById('multEcho');
+  if(bcEcho)  bcEcho.textContent  = String(state.bombCount);
+  if(multEcho) multEcho.textContent = String(m);
+
+  // 底部小计
+  const dockMult = document.getElementById('dockMult');
+  if(dockMult) dockMult.textContent = '×' + m;
+
+    // 💣 炸弹 emoji：分阶段 + 尺寸随数量变化
+    const bombIcon = document.getElementById('bombIcon');
+    if (bombIcon){
+      const c = state.bombCount;
+
+      // 放大：基础 1，按数量线性放大；想更大就把上限 4.5 调更高或去掉 Math.min
+      const scale = Math.min(1 + c * 0.2, 4.5);
+      bombIcon.style.setProperty('--bombScale', scale);
+
+      // 先清类
+      bombIcon.classList.remove('bombShaking','stage1','stage2','stage3');
+
+      if (c > 0){
+        bombIcon.classList.add('bombShaking');
+        if (c <= 3)      bombIcon.classList.add('stage1');
+        else if (c <= 6) bombIcon.classList.add('stage2');
+        else             bombIcon.classList.add('stage3');
+      } else {
+        // 归零：静止还原
+        bombIcon.style.setProperty('--bombScale', 1);
+      }
+    }
+}
 /* ================== 初始化 ================== */
 function init(){
   load();
