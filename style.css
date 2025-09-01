@@ -1,7 +1,7 @@
 /* ================= Diamanté · 主题变量（中性/石墨） ================= */
 :root{
   /* Chrome 区（顶部/底部栏、浮动条等框架层） */
-  --chrome-bg: #0e141f;
+  --chrome-bg: #000000;
   --chrome-bg-blur: rgba(14, 20, 31, 0.95);
   --chrome-line: rgba(27, 33, 80, 0.2);
 
@@ -132,6 +132,7 @@ th{color:#e8edf6; font-weight:600}
 }
 .tabbtn .ico{
   font-size:36px;            /* 图标放大 */
+      max-height: calc(var(--tabbar-h) - 24px);
   line-height:1;
 }
 .tabbtn.active{
