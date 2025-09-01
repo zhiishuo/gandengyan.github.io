@@ -105,8 +105,7 @@
             <div id="winnerPot" class="mono" style="margin-top:6px; color:#ffdede"></div>
 
             <div class="flex" style="margin-top:10px; justify-content:flex-end">
-              <button class="btn" id="undo">撤销</button>
-              <button class="btn accent" id="commit_m">入账</button>
+
             </div>
           </div>
         </div>
@@ -145,6 +144,16 @@
     <div class="dockInner">
       <div>当前倍数：<b class="mono" id="dockMult">×1</b></div>
       <div>赢家预计进账：<b class="mono" id="dockPot">+0</b></div>
+            <!-- 新增按钮组 -->
+    <!-- 小计条内 -->
+    <div class="dockActions" role="group" aria-label="入账与撤销">
+      <button id="commit_m" class="gbtn primary" type="button">
+        <span class="gbtn-ico">✔</span><span>入账</span>
+      </button>
+      <button id="undo" class="gbtn ghost" type="button">
+        <span class="gbtn-ico">↺</span><span>撤销</span>
+      </button>
+    </div>
     </div>
   </div>
 
