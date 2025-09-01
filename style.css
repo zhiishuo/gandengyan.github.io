@@ -3,16 +3,16 @@
   /* Chrome 区（顶部/底部栏、浮动条等框架层） */
   --chrome-bg: #0e141f;
   --chrome-bg-blur: rgba(14, 20, 31, 0.95);
-  --chrome-line: rgba(247, 248, 255, 0.2);
+  --chrome-line: rgba(27, 33, 80, 0.2);
 
   /* Content 区（中间页面背景 + 面板） */
-  --content-bg1: rgba(20,23,29,.42);
-  --content-bg2: #0f1624;
+  --content-bg1: rgba(116, 119, 124, 0.42);
+  --content-bg2: #525355;
   --panel: rgba(32,37,48,.92);
-  --line: rgba(180,186,206,.20);
+  --line: rgba(143, 143, 154, 0.2);
 
   /* 文本与状态色 */
-  --ink:#f6f8fb; --muted:#c5ceda;
+  --ink:#f6f8fb; --muted: #949eac;
   --accent:#29d076; --warn:#ef4444; --info:#58c7f3;
 
   --shadow: 0 12px 30px rgba(0,0,0,.24);
@@ -21,8 +21,8 @@
   --trans-slow:.35s cubic-bezier(.22,.61,.36,1);
 
   /* 底部尺寸变量（统一管理） */
-  --tabbar-h: 88px;
-  --tabbar-offset: 8px;
+  --tabbar-h: 80px;
+  --tabbar-offset: 18px;
 }
 
 *{box-sizing:border-box}
@@ -91,7 +91,7 @@ h1{ margin:0; font-size:18px; letter-spacing:.3px }
 .pill{font-size:14px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#101723}
 input,select,button{
   border-radius:12px; border:1px solid var(--line);
-  background:#0f1724; color:var(--ink);
+  background: #000000; color:var(--ink);
   padding:12px 14px; font-size:16px;
 }
 button{cursor:pointer; min-height:44px; transition:transform var(--trans-fast),box-shadow var(--trans-fast)}
@@ -110,15 +110,15 @@ th{color:#e8edf6; font-weight:600}
 
 /* ========== 底部 Tab ========== */
 .tabbar{
-  position:fixed; left:8px; right:8px;
+  position:fixed; left:26px; right:26px;
   bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-offset));
   z-index:60;
   display:flex; justify-content:space-around; gap:6px;
   height: var(--tabbar-h);
   border-top:1px solid var(--chrome-line);
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(12px);
-  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
 }
 .tabbtn{
   flex:1;
@@ -165,13 +165,13 @@ th{color:#e8edf6; font-weight:600}
   position: fixed;
   left: 8px;
   right: 8px;
-  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 18px + env(safe-area-inset-bottom));
+  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 12px + env(safe-area-inset-bottom));
   /* ↑ 这里 28px 你可按需调大/调小（20~36 都行） */
   z-index: 80;  /* 必须比 .tabbar 的 60 大 */
-  opacity: 0;
+  opacity: 1;
   transform: translateY(8px);
   pointer-events: none;
-  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
+  transition: opacity .38s var(--trans-slow), transform .38s var(--trans-slow);
 }
 .subtotalDock.show{ opacity:1; transform:translateY(0) }
 .subtotalDock .dockInner{
@@ -180,7 +180,7 @@ th{color:#e8edf6; font-weight:600}
   border:1px solid var(--chrome-line);
   border-radius:20px;
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur( 0px);
   box-shadow: var(--shadow);
 }
 .subtotalDock .dockInner > div{
@@ -188,11 +188,13 @@ th{color:#e8edf6; font-weight:600}
   color:#dfe7f6;
 }
 .subtotalDock .dockInner .mono{
-  font-size:18px;            /* 数字略大但不过分 */
+  font-size:20px;            /* 数字略大但不过分 */
   font-weight:700;
   letter-spacing:.2px;
 }
-#dockPot{ font-size:19px; font-weight:800; }
+#dockPot{ font-size:20px; font-weight:800; }
+
+
 
 /* ========== Toast ========== */
 .toast{
@@ -210,19 +212,19 @@ th{color:#e8edf6; font-weight:600}
 .rankHeader{ text-align:center; margin:4px 0 10px 0 }
 .rankHeader h2{ margin:0; font-size:17px; letter-spacing:.4px }
 .rankHeader .sub{ margin-top:4px; font-size:12px; color:var(--muted) }
-.rankList{ display:flex; flex-direction:column; gap:6px }
+.rankList{ display:flex; flex-direction:column; gap:9px }
 .rankCard{
-  display:grid; grid-template-columns:56px 1fr auto; gap:10px; align-items:center;
-  padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#0f1520aa;
+  display:grid; grid-template-columns:56px 1fr auto; gap:20px; align-items:center;
+  padding:10px 12px; border:2px solid var(--line); border-radius:14px; background: rgba(104, 56, 56, 0.67);
 }
 .rankNo{
-  width:48px; height:48px; border-radius:12px; display:grid; place-items:center;
-  font-weight:900; font-size:22px; color:#0e1116; background:#858282;
+  width:46px; height:46px; border-radius:12px; display:grid; place-items:center;
+  font-weight:700; font-size:24px; color:#0e1116; background: #8c8686;
 }
-.rankNo.gold{ background:linear-gradient(135deg,#ffd76a,#f4b400,#d9a400); color:#3a2a09 }
-.rankNo.silver{ background:linear-gradient(135deg,#f0f3f8,#cfd6de,#b9c2cc); color:#2e3135 }
-.rankNo.bronze{ background:linear-gradient(135deg,#f2c7a1,#d99159,#a56438); color:#2f1d0f }
-.rankName{ font-size:16px }
+.rankNo.gold{ background:linear-gradient(135deg, #ffffff,#f4b400, #615328); color:#3a2a09 }
+.rankNo.silver{ background:linear-gradient(135deg, #ffffff, #b2c0cf, #455e7a); color:#2e3135 }
+.rankNo.bronze{ background:linear-gradient(135deg, #eadddd,#d99159, #67442c); color:#2f1d0f }
+.rankName{ font-size:19px ;font-weight:600}
 .rankScore{
   justify-self:end; font-family:ui-monospace,Menlo,Consolas,monospace;
   font-size:26px; font-weight:800; padding:6px 10px; border-radius:12px;
@@ -238,33 +240,15 @@ th{color:#e8edf6; font-weight:600}
 /* ========== 其它细节 ========== */
 .remainInp:disabled{ opacity:.6; color:#fff; }
 
-/* ---- 统一控制小计浮条与底部 Tab 的相对间距 ---- */
-:root{
-  --dock-gap: 30px;  /* 小计浮条距 Tab 的额外间距（可按需改 24~48） */
-}
-
-/* 小计浮条：比 tabbar 层级低，不会遮住；并往上抬一些 */
-.subtotalDock{
-  position: fixed;
-  left: 8px;
-  right: 8px;
-  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + var(--dock-gap) + env(safe-area-inset-bottom));
-  z-index: 58;  /* tabbar 是 60；小计条放在其下方，避免遮挡 */
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;  /* 保险：即使视觉重叠也不会拦截点击 */
-  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
-}
-.subtotalDock.show{ opacity:1; transform:translateY(0) }
 
 /* 内部样式保持不变（如需） */
 .subtotalDock .dockInner{
   display:flex; justify-content:space-between; align-items:center; gap:16px;
   padding:12px 14px;
   border:1px solid var(--chrome-line);
-  border-radius:20px;
+  border-radius:50px;
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(0 px);
   box-shadow: var(--shadow);
 }
 
@@ -293,7 +277,7 @@ th{color:#e8edf6; font-weight:600}
   pointer-events: none;       /* 即使重叠也不会拦截点击 */
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity .25s var(--trans-slow), transform .25s var(--trans-slow);
+  transition: opacity .35s var(--trans-slow), transform .15s var(--trans-slow);
 }
 .subtotalDock
 
@@ -308,8 +292,8 @@ th{color:#e8edf6; font-weight:600}
   padding: 0 10px;                    /* 内边距更轻 */
   border-top: 1px solid var(--chrome-line);
   background: var(--chrome-bg-blur);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;                /* 容器轻圆角 */
+  backdrop-filter: blur(5px);
+  border-radius: 18px;                /* 容器轻圆角 */
 }
 
 /* 按钮本体：去掉全局按钮的边框和背景，做扁平 */
@@ -433,7 +417,7 @@ th{color:#e8edf6; font-weight:600}
 
 /* 顶部赢家选择：标签 + 扁平按钮（和全局 .btn 不冲突） */
 .winnerLabel{
-  font-size: 14px;
+  font-size: 16px;
   color: var(--muted);
   margin-right: 8px;
 }
@@ -459,27 +443,37 @@ th{color:#e8edf6; font-weight:600}
 
 /* 表格赢家行：绿色描边 + 淡绿底；禁用输入依旧清晰 */
 .winnerRow{
-  background: rgba(228, 39, 47, 0.08);
-}
-.winnerRow td{
-  border-bottom-color: rgba(41,208,118,.28);
-  box-shadow: inset 3px 0 0 rgba(26, 39, 32, 0.55); /* 左侧竖线更直观 */
-}
-.winnerRow .remainInp:disabled{
-  opacity: .95; color: #635e5e; border-color: rgb(43, 45, 48);
+  background: rgba(78, 198, 52, 0.08);
 }
 
-/* 赢家之后的行：轻微加深底色区分（不抢眼） */
-.afterWinnerRow{
-  background: rgba(255,255,255,.015);
+.winnerRow .remainInp:disabled{
+  opacity: .95; color: #635e5e; border-color: rgb(55, 61, 74);
 }
+
 .afterWinnerRow td{
-  border-bottom-color: rgba(180,186,206,.24);
+  border-bottom-color: rgba(63, 69, 87, 0.24);
+}
+
+/* 春天：输入类控件（input/checkbox/select等）被禁用时的灰化 */
+.winnerRow .springInp:disabled,
+.winnerRow .springSelect:disabled,
+.winnerRow .springChk:disabled {
+  opacity: .95;
+  color: #635e5e;
+  border-color: rgb(55, 61, 74);
+}
+
+/* 春天：若是按钮/徽标等非表单元素，用灰度+降不透明度 */
+.winnerRow .springBadge,
+.winnerRow .springBtn {
+  filter: grayscale(1);
+  opacity: .45;
+  pointer-events: none;    /* 赢家时不可点（如需） */
 }
 
 /* 极简线性图标：跟随 currentColor 着色、无填充、圆角端点 */
 .tabbtn .ico{
-  width: 28px; height: 28px;     /* 你也可以用 30–32，看手感 */
+  width: 32px; height: 32px;     /* 你也可以用 30–32，看手感 */
   display: inline-flex; align-items: center; justify-content: center;
 }
 .tabbtn .ico svg{
@@ -512,7 +506,7 @@ th{color:#e8edf6; font-weight:600}
   box-shadow: none !important;
   color: #cfd7e6 !important;    /* 未选中 */
   padding: 6px 2px !important;  /* 原 8~10，整体更“薄” */
-  font-size: 11px !important;   /* 字号保持克制 */
+  font-size: 12px !important;   /* 字号保持克制 */
   transition: color .18s ease, transform .12s ease !important;
 }
 
@@ -553,3 +547,103 @@ th{color:#e8edf6; font-weight:600}
   .tabbtn:hover{ background: transparent !important; }
 }
 .tabbtn:active{ transform: translateY(1px) scale(.99); }
+
+
+:root{
+  /* 分层表面色（轻微区分） */
+  --surface-bg:        linear-gradient(180deg, var(--content-bg1), var(--content-bg2)); /* 页面背景 */
+  --surface-panel: rgba(16, 15, 15, 0.78);   /* 记分板/通用面板（中性、略亮） */
+  --surface-panel-bd: rgba(108, 117, 147, 0.24);
+
+  --surface-bomb:      linear-gradient(180deg,#44161b,#2a1013); /* 倍数卡片（暖） */
+  --surface-bomb-bd: rgba(193, 145, 145, 0.34);
+
+  --surface-tabbar: rgba(71, 70, 70, 0.78);  /* 底部四按钮（冷） */
+  --surface-tabbar-bd: rgb(140, 139, 139);
+
+  /* 轻微色调差异点缀 */
+  --ink-weak:  #d7e0ef;
+  --muted-weak:#9fb0c9;
+}
+
+/* 页面背景：沿用你的背景，但确保引用统一变量（可选） */
+html{
+  background: var(--surface-bg);
+}
+
+/* 记分板/通用面板：更清晰的中性层 */
+.panel{
+  background: var(--surface-panel) !important;
+  border-color: var(--surface-panel-bd) !important;
+  box-shadow: 0 12px 30px rgba(53, 53, 57, 0.26);
+}
+
+/* 排名卡片等半透明容器也略提亮（可选） */
+.rankCard{
+  background: rgba(53, 53, 62, 0.72);
+  border-color: var(--surface-panel-bd);
+}
+
+/* 倍数卡片（暖调、与底栏明显区分） */
+.bombCard{
+  background: var(--surface-bomb) !important;
+  border-color: var(--surface-bomb-bd) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 26px rgba(70,20,20,.28),
+    0 0 0 1px rgba(180, 40, 40, .08);
+}
+.bombLabel{ color:#ffdede }
+.bombValue{ color:#fff4f4 }
+
+/* 底部四按钮（冷调、变窄且与倍数区分） */
+.tabbar{
+  background: var(--surface-tabbar) !important;
+  border-color: var(--surface-tabbar-bd) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  padding: 0 10px !important;   /* 维持更“窄”的观感 */
+}
+
+/* 未选中与选中颜色更有层级 */
+.tabbtn{ color: var(--ink-weak) !important; }
+.tabbtn.active{
+  color: var(--accent) !important;         /* 只换主题色，不加块状背景 */
+  text-shadow: 0 0 0 transparent;
+}
+
+/* 小计浮条：与底栏同家族，但亮一号，提高可读性 */
+.subtotalDock .dockInner{
+  background: rgb(66, 65, 65);
+  border-color: var(--surface-tabbar-bd);
+  color: var(--ink);
+}
+
+/* === 小计条：透明度 + 宽度可调（完全居中） === */
+:root{
+  --dock-alpha: .05;           /* 透明度 0~1，调大更实 */
+  --dock-maxw: 480px;          /* 最大宽度，可改 560/640 等 */
+  --dock-side-gap: 12px;       /* 小屏下两侧保留边距 */
+  --dock-h: 50px;              /* 高度，改数值可更矮/更高 */
+}
+
+.subtotalDock{
+  left: 50% !important;
+  right: auto !important;
+  width: min(var(--dock-maxw), calc(100% - var(--dock-side-gap) * 2)) !important;
+  transform: translateX(-50%) translateY(8px) !important; /* 完全水平居中 */
+}
+
+/* 背景半透明，不影响文字 */
+.subtotalDock .dockInner{
+  background: rgba(16, 24, 36, var(--dock-alpha)) !important;
+  border-color: var(--surface-tabbar-bd) !important;
+  color: var(--ink) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: 12px 14px !important;
+  border-radius: 25px !important;
+}
+
+/* 数字高亮 */
+#dockPot{ color: var(--accent) !important; }
+
