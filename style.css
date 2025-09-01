@@ -52,7 +52,7 @@ header{
   color: var(--ink);
 }
 .titleRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-h1{ margin:0; font-size:18px; letter-spacing:.3px }
+h1{ margin:0; font-size:24px; letter-spacing:.3px }
 .badgeMini{
   display:inline-flex; align-items:center; gap:8px;
   padding:6px 10px; border:1px solid var(--line);
@@ -621,7 +621,7 @@ html{
 /* === 小计条：透明度 + 宽度可调（完全居中） === */
 :root{
   --dock-alpha: .05;           /* 透明度 0~1，调大更实 */
-  --dock-maxw: 480px;          /* 最大宽度，可改 560/640 等 */
+  --dock-maxw: 380px;          /* 最大宽度，可改 560/640 等 */
   --dock-side-gap: 12px;       /* 小屏下两侧保留边距 */
   --dock-h: 50px;              /* 高度，改数值可更矮/更高 */
 }
