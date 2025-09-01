@@ -8,8 +8,8 @@
   /* Content 区（中间页面背景 + 面板） */
   --content-bg1: rgba(116, 119, 124, 0.42);
   --content-bg2: #525355;
-  --panel: rgba(32,37,48,.92);
-  --line: rgba(143, 143, 154, 0.2);
+  --panel: rgba(4, 22, 60, 0.92);
+  --line: rgba(255, 255, 255, 0.24);
 
   /* 文本与状态色 */
   --ink:#f6f8fb; --muted: #949eac;
@@ -63,7 +63,7 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
 /* ========== 视口容器 ========== */
 .viewport{
   position:relative;
-  height:calc(100dvh - var(--tabbar-h) - var(--tabbar-offset));
+  height:calc(110dvh - var(--tabbar-h) - var(--tabbar-offset));
   overflow:hidden;
 }
 .pages{
@@ -451,10 +451,6 @@ th{color:#e8edf6; font-weight:600}
   opacity: .95; color: #635e5e; border-color: rgb(55, 61, 74);
 }
 
-.afterWinnerRow td{
-  border-bottom-color: rgba(63, 69, 87, 0.24);
-}
-
 /* 春天：输入类控件（input/checkbox/select等）被禁用时的灰化 */
 .winnerRow .springInp:disabled,
 .winnerRow .springSelect:disabled,
@@ -644,7 +640,4 @@ html{
   padding: 12px 14px !important;
   border-radius: 25px !important;
 }
-
-/* 数字高亮 */
-#dockPot{ color: var(--accent) !important; }
 
