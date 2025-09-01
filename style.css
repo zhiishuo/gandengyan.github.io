@@ -95,9 +95,12 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   height: 100%;
   overflow: auto;             /* 仅这里滚动 */
   -webkit-overflow-scrolling: touch;
-  /* ✅ 用动态变量；兜底给个略大的值以防 JS 失效 */
-  padding-bottom: var(--reserved-bottom, 380px) !important;
+  /* 这条保留：底部为 Tab + 小计条 预留空间 */
+  padding-bottom: calc(
+    16px + var(--tabbar-h) + var(--tabbar-offset) + var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom)
+  ) !important;
 }
+
 /* ========== 通用/面板/表格/输入 ========== */
 .panel{
   background: var(--panel);
@@ -173,7 +176,7 @@ th{color:#e8edf6; font-weight:600}
 .bombLabel::before{content:"💣";}
 .bombValue{ font-weight:800; font-size:30px; letter-spacing:.4px; color:#fff2f2 }
 .bombBtns .btn{
-  min-width:88px; min-height:62px; font-size:22px; font-weight:00; border-radius:18px;
+  min-width:88px; min-height:62px; font-size:22px; font-weight:10; border-radius:18px;
 }
 #bombDec, #bombInc{ background:#2b0f12; border-color:#7a2d2d; color:#ffe2e2 }
 #bombReset{ background:#3a1515; border-color:#a33a3a; color:#ffdede }
@@ -475,10 +478,6 @@ html{ background: var(--surface-bg); }
   .dockActions, .gbtn{ opacity:1; transform:none; }
 }
 
-
-
-#winnerPot{
-  color: var(--accent) !important;      /* 面板里那行“赢家本轮预计：+X” */
-  text-shadow: none;
-}
+.pages .page { display: none; }
+.pages .page.active { display: block; }
 
