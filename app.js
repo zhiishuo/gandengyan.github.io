@@ -10,7 +10,6 @@ function loadDraft(){
     if(s){ const d = JSON.parse(s); if(d && typeof d==='object'){ roundDraft = { remain: d.remain||[], springs: d.springs||[] }; } }
   }catch(e){}
 }
-
 let state = {
   players: Array.from({length:7}, (_,i)=>({name:"玩家"+(i+1), score:0})),
   history: [],
@@ -533,6 +532,48 @@ function stickDockToTab(){
 }
 window.addEventListener('resize', stickDockToTab);
 
+
+// === 精确预留底部空间：Tab高度 + Dock高度 + 一点安全边距 ===
+function reserveBottomSpace() {
+  const root = document.documentElement;
+  const tab = document.querySelector('.tabbar');
+  const dock = document.getElementById('subtotalDock');
+
+  const tabH  = tab  ? Math.ceil(tab.getBoundingClientRect().height)  : 0;
+  const dockH = (dock && dock.classList.contains('show'))
+                 ? Math.ceil(dock.getBoundingClientRect().height)
+                 : 0;
+
+  // 额外给一点安全边距，避免阴影/圆角被压住
+  const extra = 24;
+
+  const total = tabH + dockH + extra;
+
+  root.style.setProperty('--reserved-bottom', total + 'px');
+}
+
+// 监听尺寸变化 & 软键盘/地址栏变化
+window.addEventListener('resize', reserveBottomSpace);
+
+// 当 Tab 或 Dock 尺寸/显隐变更时也重算
+const ro = new ResizeObserver(reserveBottomSpace);
+['.tabbar', '#subtotalDock'].forEach(sel => {
+  const el = document.querySelector(sel);
+  if (el) ro.observe(el);
+});
+
+function go(tab){
+  const idx = pageIndex[tab] ?? 1;
+  current = idx;
+  pagesEl.style.transform = `translate3d(${-100*idx}%,0,0)`;
+  tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+
+  const dock = document.getElementById('subtotalDock');
+  if (dock) dock.classList.toggle('show', tab === 'score');
+
+  stickDockToTab();
+  reserveBottomSpace();  // ✅ 切页后重算
+}
 /* ================== 初始化 ================== */
 function init(){
   load();
@@ -541,6 +582,7 @@ function init(){
   renderPlayers(); renderRemainArea(); renderQuickWinner(); renderWinner1(); renderRank(); renderHistory();
   bindBombUI(); switchMode(); updateBombUI(); recomputePreview();
   stickDockToTab();
+  reserveBottomSpace();
 
   // 交互绑定
   const modeSel = document.getElementById('mode');
@@ -554,6 +596,7 @@ function init(){
   const clearBtn = document.getElementById('clearHistory');
   if(clearBtn) clearBtn.addEventListener('click', clearHistory);
   const minusP = document.getElementById('minusP');
+  const minusP = document.getElementById('minusP');
   if(minusP) minusP.addEventListener('click', ()=> applyPlayerCount(N()-1));
   const plusP = document.getElementById('plusP');
   if(plusP) plusP.addEventListener('click', ()=> applyPlayerCount(N()+1));
@@ -565,3 +608,6 @@ function init(){
   if(resetBtn) resetBtn.addEventListener('click', resetNames);
 }
 init();
+
+
+
