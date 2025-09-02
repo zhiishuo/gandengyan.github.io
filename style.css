@@ -22,7 +22,7 @@
 
   /* 底部尺寸变量（统一管理） */
   --tabbar-h: 80px;
-  --tabbar-offset: 18px;
+  --tabbar-offset: 24px;
 
   /* 小计条尺寸/外观变量 */
   --dock-h: 50px;           /* 小计条视觉高度 */
@@ -291,7 +291,7 @@ th{color:#e8edf6; font-weight:600}
   padding:12px 14px;
   border:1px solid var(--chrome-line);
   border-radius:25px;
-  background: rgba(200,200,200,0.07);
+  background: rgba(163, 23, 23, 0.07);
   border-color: var(--surface-tabbar-bd);
   color: var(--ink);
   backdrop-filter: blur(5px);
@@ -355,14 +355,14 @@ th{color:#e8edf6; font-weight:600}
 .gbtn:active{ transform: translateY(0) scale(.98); transition-duration:.12s; }
 /* 入账按钮更大、更鲜艳 + 呼吸发光（绿色版本） */
 .gbtn.primary {
-  background: linear-gradient(180deg, #22c55e, #15803d); /* 鲜绿色渐变 */
+  background: linear-gradient(180deg, #199747, #15803d); /* 鲜绿色渐变 */
   border-color: #16a34a;
   color: #ffffff;
-  font-size: 16px;
-  padding: 16px 28px;
-  min-height: 54px;
+  font-size: 24px;
+  padding: 11px 24px;
+  min-height: 44px;
   border-radius: 999px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: .3px;
 
   /* 光晕效果：绿色主调 */
@@ -1018,7 +1018,7 @@ input.name {
 
 /* 只想让“记分”页更长：单独覆盖（可选） */
 .page[data-page="score"]::after{
-  height: calc(var(--reserved-bottom, 0px) + 300px);
+  height: calc(var(--reserved-bottom, 0px) + 200px);
 }
 
 
@@ -1114,3 +1114,139 @@ html{
 table tr td{ border-bottom: 1px dashed rgba(255,255,255,.14); }
 table tr:last-child td{ border-bottom-color: rgba(255,255,255,.08); }
 
+/* ===== 小计条：可配置玻璃质感 + 统一弹出/收起动画（无冲突版） ===== */
+
+/* 统一变量 —— 合并到全局 :root，避免重复定义 */
+:root{
+  /* 动效参数 */
+  --dock-pop-dur: .36s;
+  --dock-pop-ease: cubic-bezier(.22,.61,.36,1);
+  --dock-pop-translate: 60px;  /* 从更下面弹出：调大更夸张，例如 80px/100px */
+  --dock-pop-overshoot: 10px;
+  --dock-pop-blur: 8px;
+  --dock-exit-dur: .30s;
+  --dock-exit-ease: cubic-bezier(.16,.84,.44,0.1); /* 更顺滑的缓动 */
+  --dock-exit-translate: 28px;       /* 下落距离（想更明显就调大到 36/48px） */
+  --dock-exit-squash: .98;           /* 轻微压扁（0.96~1） */
+  /* 玻璃观感 */
+  --dock-glass-bg: rgba(37, 36, 36, 0.68);           /* 玻璃底色（主控色） */
+  --dock-glass-border: rgba(180,190,210,0.18);        /* 外圈边线 */
+  --dock-glass-innerline: rgba(97, 91, 91, 0.31);     /* 内侧高光线 */
+  --dock-glass-blur: 23px;                            /* 毛玻璃模糊半径 */
+  --dock-glass-sat: 1.35;                             /* 饱和提拉 */
+  --dock-bottom-glow: radial-gradient(60% 120% at 50% 120%, rgba(255,255,255,.10), rgba(255,255,255,0) 70%);
+  --dock-noise:
+    radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,.10) 0, transparent 100%),
+    radial-gradient(1px 1px at 75% 55%, rgba(255,255,255,.08) 0, transparent 100%),
+    radial-gradient(1px 1px at 45% 75%, rgba(255,255,255,.06) 0, transparent 100%);
+}
+
+/* 外层容器：位置、层级、交互统一 */
+.subtotalDock{
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h) + var(--tabbar-offset) + 12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* 入场/离场动画 */
+.subtotalDock.show{
+  animation: dockPopIn var(--dock-pop-dur) var(--dock-pop-ease) forwards;
+}
+
+/* 触发离场：外层统一做动画，内层只做随动位移 */
+.subtotalDock.leaving{
+  animation: dockExit var(--dock-exit-dur) var(--dock-exit-ease) forwards;
+  pointer-events: none;              /* 退场期间禁点 */
+}
+
+/* 内层与外层同步一点位移，避免“画框不同步” */
+.subtotalDock.leaving .dockInner{
+  transform: translateY(8px);
+  transition: transform var(--dock-exit-dur) var(--dock-exit-ease);
+}
+
+/* 关键帧：先微缩/下落，再自然消失 */
+@keyframes dockExit{
+  0%   { opacity: 1;  transform: translateX(-50%) translateY(0) scale(1); }
+  60%  { opacity: .22; transform: translateX(-50%) translateY(calc(var(--dock-exit-translate) * .45)) scale(var(--dock-exit-squash)); }
+  100% { opacity: 0;  transform: translateX(-50%) translateY(var(--dock-exit-translate))        scale(var(--dock-exit-squash)); }
+}
+
+/* 关键帧动画（不再使用 filter，避免阻断 backdrop-filter） */
+@keyframes dockPopIn{
+  0%   { opacity: 0; transform: translateX(-50%) translateY(var(--dock-pop-translate)) scale(.98); }
+  55%  { opacity: 1; transform: translateX(-50%) translateY(calc(var(--dock-pop-overshoot) * -1)) scale(1.02); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes dockPopOut{
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.98); }
+}
+
+/* 玻璃体本体：不再直接写 backdrop-filter，交给 ::before 做 */
+.subtotalDock .dockInner{
+  position: relative;
+  display:flex; align-items:center; gap:16px;
+  padding:12px 14px;
+  border-radius:999px;
+  pointer-events: auto;
+
+  background: var(--dock-glass-bg);
+  border: 1px solid var(--dock-glass-border);
+  background-clip: padding-box;
+  color: var(--ink);
+
+  transform: translateY(4px);
+  transition: transform var(--dock-pop-dur) var(--dock-pop-ease);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0,0,0,.12);
+
+  z-index: 0;
+}
+.subtotalDock.show .dockInner{ transform: translateY(0); }
+.subtotalDock.leaving .dockInner{ transform: translateY(8px); }
+.subtotalDock .dockInner > *{ position: relative; z-index: 1; }
+
+/* ::before 专职做真实模糊层 */
+.subtotalDock .dockInner::before{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit;
+  background: rgba(255,255,255,0.01);
+  backdrop-filter: blur(var(--dock-glass-blur)) saturate(var(--dock-glass-sat));
+  -webkit-backdrop-filter: blur(var(--dock-glass-blur)) saturate(var(--dock-glass-sat));
+  z-index: 0;
+  box-shadow: inset 0 0 0 1px var(--dock-glass-innerline);
+}
+
+/* ::after 负责底部晕光 + 颗粒噪点 */
+.subtotalDock .dockInner::after{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit;
+  background:
+    var(--dock-bottom-glow),
+    var(--dock-noise);
+  opacity: 1;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 子按钮 */
+.subtotalDock .gbtn{ opacity:1; transform:none; }
+
+/* 降级：动效偏好较低时 */
+@media (prefers-reduced-motion: reduce){
+  .subtotalDock, .subtotalDock .dockInner{
+    animation: none !important;
+    transition: none !important;
+    transform: translateX(-50%) translateY(0) !important;
+    filter: none !important; opacity: 1 !important;
+  }
+}

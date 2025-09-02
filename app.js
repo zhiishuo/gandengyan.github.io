@@ -73,9 +73,12 @@ function go(tabKey){
   // 仅显示对应页面
   showOnly(tabKey);
 
-  // 小计浮条只在“记分”页显示
-  const dock = document.getElementById('subtotalDock');
-  if (dock) dock.classList.toggle('show', tabKey === 'score');
+  // 小计浮条只在“记分”页显示（用显式函数，支持离场动画）
+  if (tabKey === 'score') {
+    showSubtotalDock();
+  } else {
+    hideSubtotalDock();
+  }
 
   stickDockToTab();
   reserveBottomSpace();
@@ -660,6 +663,23 @@ function updateBombUI(){
         bombIcon.style.setProperty('--bombScale', 1);
       }
     }
+}
+
+function showSubtotalDock(){
+  const dock = document.querySelector('.subtotalDock');
+  if (!dock) return;
+  dock.classList.remove('leaving');
+  dock.classList.add('show');
+}
+
+function hideSubtotalDock(){
+  const dock = document.querySelector('.subtotalDock');
+  if (!dock) return;
+  dock.classList.remove('show');
+  dock.classList.add('leaving');
+  dock.addEventListener('animationend', () => {
+    dock.classList.remove('leaving');
+  }, { once: true });
 }
 
 
