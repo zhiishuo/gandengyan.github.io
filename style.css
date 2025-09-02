@@ -9,7 +9,7 @@
   --content-bg1: rgba(158, 155, 155, 0.42);
   --content-bg2: #000000;
   --panel: rgba(4, 221, 60, 0.92);
-  --line: rgba(255, 255, 255, 0.24);
+  --line: rgba(156, 52, 52, 0.24);
 
   /* 文本与状态色 */
   --ink:#f6f8fb; --muted: #e0e4ee;
@@ -27,8 +27,8 @@
   /* 小计条尺寸/外观变量 */
   --dock-h: 50px;           /* 小计条视觉高度 */
   --dock-gap: 20px;         /* 与底部栏垂直间距（备选） */
-  --dock-alpha: .65;        /* 小计条内层半透明 */
-  --dock-maxw: 560px;       /* 最大宽度 */
+  --dock-alpha: .45;        /* 小计条内层半透明 */
+  --dock-maxw: 660px;       /* 最大宽度 */
   --dock-side-gap: 12px;    /* 小屏留白 */
 
   /* 小计条动画统一参数 */
@@ -109,7 +109,7 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   border-radius: var(--radius);
   padding:12px; box-shadow: var(--shadow);
 }
-.panel h2{margin:6px 0 10px; font-size:16px}
+.panel h2{margin:16px 0 10px; font-size:26px}
 .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
 .pill{font-size:14px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#101723}
 input,select,button{
@@ -174,15 +174,16 @@ th{color:#e8edf6; font-weight:600}
 /* ========== 炸弹卡 ========== */
 .bombCard{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
-  border-radius:24px;
+  border-radius:34px;
   background: linear-gradient(180deg,#3a1216,#241014);
-  border:1px solid rgba(197, 0, 0, 0.28);
+  border:2px solid rgba(197, 0, 0, 0.28);
   padding:24px 12px; text-align:center;
+    padding-top:42px ;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(90,20,20,.22);
 }
 .bombLabel{ font-size:13px; color:#ffd8d8; display:flex; align-items:center; gap:6px; letter-spacing:.2px }
 .bombLabel::before{content:"💣";}
-.bombValue{ font-weight:800; font-size:30px; letter-spacing:.4px; color:#fff2f2 }
+.bombValue{ font-weight:800; font-size:32px; letter-spacing:.4px; color:#fff2f2 }
 .bombBtns .btn{
   min-width:98px; min-height:72px; font-size:26px; font-weight:800; border-radius:100px;
 }
@@ -305,12 +306,12 @@ th{color:#e8edf6; font-weight:600}
 
 /* 左侧文案（保持原样） */
 .subtotalDock .dockInner > div{
-  font-size:13px; color:#dfe7f6;
+  font-size:15px; color:#dfe7f6;
 }
 .subtotalDock .dockInner .mono{
-  font-size:23px; font-weight:700; letter-spacing:.2px;
+  font-size:18px; font-weight:700; letter-spacing:.2px;
 }
-#dockPot{ font-size:24px; font-weight:800; }
+#dockPot{ font-size:20px; font-weight:800; }
 
 /* 只把小计条里的“预计进账”数字改成绿色 */
 .subtotalDock .dockInner #dockPot{
@@ -339,8 +340,8 @@ th{color:#e8edf6; font-weight:600}
 /* 通用按钮外观 */
 .gbtn{
   display:inline-flex; align-items:center; gap:8px;
-  min-height:36px; padding:12px 16px;
-  border-radius:999px; font-size:14px; font-weight:600;
+  min-height:42px; padding:12px 16px;
+  border-radius:999px; font-size:14px; font-weight:800;
   border:1px solid var(--line); background:#0f1724; color:var(--ink);
   box-shadow: 0 4px 14px rgba(0,0,0,.16);
   opacity: 0; transform: translateY(8px) scale(.98);
@@ -388,33 +389,115 @@ th{color:#e8edf6; font-weight:600}
 }
 
 /* ========== 排名卡片 ========== */
-.rankHeader{ text-align:center; margin:4px 0 10px 0 }
-.rankHeader h2{ margin:0; font-size:17px; letter-spacing:.4px }
-.rankHeader .sub{ margin-top:4px; font-size:12px; color:var(--muted) }
-.rankList{ display:flex; flex-direction:column; gap:9px }
+
+/* Header 更有层级 */
+.rankHeader{
+  text-align: center;
+  margin: 4px 0 14px;
+}
+.rankHeader h2{
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .4px;
+  font-weight: 800;
+}
+.rankHeader .sub{
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* 列表间距更紧凑，但可读 */
+.rankList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .rankCard{
   display:grid; grid-template-columns:56px 1fr auto; gap:20px; align-items:center;
   padding:10px 12px; border:2px solid var(--line); border-radius:14px; background: rgba(104, 56, 56, 0.67);
 }
+/* 左侧名次徽章：更像奖牌 */
 .rankNo{
-  width:46px; height:46px; border-radius:12px; display:grid; place-items:center;
-  font-weight:700; font-size:24px; color:#0e1116; background: #8c8686;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 22px;
+  color: #0e1116;
+  background: #c5c9d3;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 10px rgba(0,0,0,.25);
 }
-.rankNo.gold{ background:linear-gradient(135deg, #ffffff,#f4b400, #615328); color:#3a2a09 }
-.rankNo.silver{ background:linear-gradient(135deg, #ffffff, #b2c0cf, #455e7a); color:#2e3135 }
-.rankNo.bronze{ background:linear-gradient(135deg, #eadddd,#d99159, #67442c); color:#2f1d0f }
-.rankName{ font-size:19px ;font-weight:600}
+.rankNo.gold{
+  background: radial-gradient(120% 120% at 30% 20%, #fff 0%, #f7d778 35%, #c49a2f 70%);
+  color:#3a2a09;
+}
+.rankNo.silver{
+  background: radial-gradient(120% 120% at 30% 20%, #fff 0%, #cdd6e2 40%, #7b8aa0 75%);
+  color:#2e3135;
+}
+.rankNo.bronze{
+  background: radial-gradient(120% 120% at 30% 20%, #ffe8d8 0%, #e3a070 40%, #8a5b36 75%);
+  color:#2f1d0f;
+}
+
+
+/* 名字区：溢出省略、对齐好 */
+.rankName{
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧分数：对齐、分单位分层级 */
 .rankScore{
-  justify-self:end; font-family:ui-monospace,Menlo,Consolas,monospace;
-  font-size:26px; font-weight:800; padding:6px 10px; border-radius:12px;
-  background:#0f1520; border:1px solid var(--line);
-  letter-spacing:.2px; display:inline-flex; align-items:baseline; gap:4px;
+  justify-self: end;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: #0f1520;
+  border: 1px solid var(--surface-panel-bd);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  min-width: 120px;          /* 避免跳动 */
+  text-align: right;
 }
-.rankScore .unit{ font-size:12px; opacity:.7 }
-.rankCard.top .rankScore{ box-shadow:0 4px 16px rgba(0,0,0,.25); background:linear-gradient(180deg,#101826,#0c121c) }
-.rankCard.pos .rankScore{ color:#16a34a }
-.rankCard.neg .rankScore{ color:#f87171 }
-.rankCard.zero .rankScore{ color:#e5e7eb }
+.rankScore .unit{
+  font-size: 12px;
+  opacity: .7;
+}
+
+/* 分数正负配色（更清晰，但不过饱和） */
+.rankCard.pos .rankScore{ color: #22c55e; }  /* 绿 */
+.rankCard.neg .rankScore{ color: #f87171; }  /* 红 */
+.rankCard.zero .rankScore{ color: #cfd7e6; } /* 灰 */
+
+/* ========== 紧凑响应式 ========== */
+@media (max-width: 380px){
+  .rankCard{ --pad-x: 10px; gap: 10px; }
+  .rankNo{ width: 48px; height: 48px; font-size: 20px; }
+  .rankName{ font-size: 16px; }
+  .rankScore{ font-size: 22px; padding: 6px 8px; min-width: 104px; }
+}
+
+/* ========== 第一名轻微呼吸效果（可关掉就删掉这段） ========== */
+.rankList > .rankCard:first-child{
+  animation: topBreath 2.8s ease-in-out infinite;
+}
+@keyframes topBreath{
+  0%,100%{ box-shadow: 0 8px 28px rgba(0,0,0,.28), 0 0 0 1px rgba(240,180,80,.08) inset; }
+  50%    { box-shadow: 0 12px 36px rgba(0,0,0,.34), 0 0 0 1px rgba(240,180,80,.16) inset; }
+}
 
 /* ========== 其它细节 ========== */
 .remainInp:disabled{ opacity:.6; color:#fff; }
@@ -505,8 +588,7 @@ html{ background: var(--surface-bg); }
     0 10px 26px rgba(70,20,20,.28),
     0 0 0 1px rgba(180, 40, 40, .08);
 }
-.bombLabel{ color:#ffdede }
-.bombValue{ color:#fff4f4 }
+
 .tabbtn{ color: var(--ink-weak) !important; }
 .tabbtn.active{ color: var(--accent) !important; text-shadow: 0 0 0 transparent; }
 
@@ -622,21 +704,21 @@ html{ background: var(--surface-bg); }
   position: relative;                  /* 供涟漪定位 */
   border-width: 2px;
   background-image:
-    radial-gradient(160% 120% at 50% -30%, rgba(255,255,255,.06), transparent 50%),
+    radial-gradient(160% 120% at 50% -30%, rgba(209, 30, 30, 0.06), transparent 50%),
     linear-gradient(180deg, rgba(255,120,120,.10), rgba(0,0,0,0));
-  filter: saturate(1.02) contrast(1.02);
-  color:#fff5f5;
+  filter: saturate(1.06) contrast(1.06);
+  color: #ffffff;
   text-shadow: 0 2px 8px rgba(255, 160, 160, .35);
 }
 
 /* “+” 比 “−” 略亮，区分一眼可见 */
 #bombInc{
-  background-color: rgba(200, 83, 51, 0.34);      /* 增强亮度 */
-  border-color: #a84646;
+  background-color: rgba(152, 63, 40, 0.34);      /* 增强亮度 */
+  border-color: #ba4444;
 }
 #bombDec{
-  background-color: rgb(111, 45, 35);
-  border-color: #a24444;
+  background-color: rgb(92, 35, 28);
+  border-color: #bb3d3d;
 }
 
 /* Hover / Focus：轻浮起 + 柔光 */
@@ -739,4 +821,18 @@ html{ background: var(--surface-bg); }
   font-size: 16px;
   color: var(--muted);
   font-weight: 600;
+}
+
+
+/* 玩家名输入框：文字居中 */
+input.name {
+  width: 160px;
+  text-align: center;
+}
+
+/* 历史列表里禁用的编辑按钮样式 */
+#historyBody .btn:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(1);
 }

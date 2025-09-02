@@ -433,21 +433,38 @@ function commitRound(){
 
 /* ================== 历史 ================== */
 function renderHistory(){
-  const tb = document.getElementById('historyBody'); if(!tb) return;
-  tb.innerHTML="";
-  state.history.forEach((h,ri)=>{
-    const tr = document.createElement('tr');
-    const detail = h.delta.map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`).join('， ');
+  const tb = document.getElementById('historyBody');
+  if (!tb) return;
+  tb.innerHTML = "";
 
-     tr.innerHTML = `<td class="mono">${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}</td>
+  state.history.forEach((h, ri) => {
+    const isLast = (ri === state.history.length - 1);
+    const tr = document.createElement('tr');
+
+    const detail = h.delta
+      .map((v,i)=>`${state.players[i]?.name||('玩家'+(i+1))}:${v>=0?'+':''}${v}`)
+      .join('， ');
+
+    tr.innerHTML = `
+      <td class="mono">第${ri + 1}局</td>
+      <td class="mono">
+        ${h.desc} ｜ 炸弹:${h.bombs}（×${h.mult}） ｜ ${detail}
+      </td>
       <td>
-        <button class="btn" data-edit="${ri}">编辑</button>
+        <button class="btn" data-edit="${ri}" ${isLast ? "" : "disabled title='只能编辑最后一局'"}>编辑</button>
         <button class="btn" data-del="${ri}">删除</button>
-      </td>`;
+      </td>
+    `;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('button[data-del]').forEach(b=> b.addEventListener('click', ()=>deleteRound(+b.dataset.del)));
-  tb.querySelectorAll('button[data-edit]').forEach(b=> b.addEventListener('click', ()=>editRound(+b.dataset.edit)));
+
+  // 只给“可用”的编辑按钮绑定事件
+  tb.querySelectorAll('button[data-edit]:not([disabled])')
+    .forEach(b => b.addEventListener('click', () => editRound(+b.dataset.edit)));
+
+  // 删除照旧
+  tb.querySelectorAll('button[data-del]')
+    .forEach(b => b.addEventListener('click', () => deleteRound(+b.dataset.del)));
 }
 function deleteRound(idx){
   const h=state.history[idx]; if(!h) return;
