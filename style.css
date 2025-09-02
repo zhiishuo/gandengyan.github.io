@@ -355,8 +355,8 @@ th{color:#e8edf6; font-weight:600}
 .gbtn:active{ transform: translateY(0) scale(.98); transition-duration:.12s; }
 /* 入账按钮更大、更鲜艳 + 呼吸发光（绿色版本） */
 .gbtn.primary {
-  background: linear-gradient(180deg, #199747, #15803d); /* 鲜绿色渐变 */
-  border-color: #16a34a;
+  background: linear-gradient(180deg, #1cc34d, #0b872e); /* 鲜绿色渐变 */
+  border-color: #c7dac0;
   color: #ffffff;
   font-size: 24px;
   padding: 11px 24px;
@@ -392,7 +392,7 @@ th{color:#e8edf6; font-weight:600}
 @media (hover:hover){
   .gbtn.primary:hover {
     transform: scale(1.08);
-    box-shadow: 0 0 24px rgba(34,197,94,.85),
+    box-shadow: 0 0 24px rgba(47, 168, 33, 0.85),
                 0 0 48px rgba(22,163,74,.55);
   }
 }
@@ -1129,11 +1129,11 @@ table tr:last-child td{ border-bottom-color: rgba(255,255,255,.08); }
   --dock-exit-translate: 28px;       /* 下落距离（想更明显就调大到 36/48px） */
   --dock-exit-squash: .98;           /* 轻微压扁（0.96~1） */
   /* 玻璃观感 */
-  --dock-glass-bg: rgba(37, 36, 36, 0.68);           /* 玻璃底色（主控色） */
-  --dock-glass-border: rgba(180,190,210,0.18);        /* 外圈边线 */
+  --dock-glass-bg: rgba(44, 43, 43, 0.48);           /* 玻璃底色（主控色） */
+  --dock-glass-border: rgba(218, 216, 216, 0.61);        /* 外圈边线 */
   --dock-glass-innerline: rgba(97, 91, 91, 0.31);     /* 内侧高光线 */
   --dock-glass-blur: 23px;                            /* 毛玻璃模糊半径 */
-  --dock-glass-sat: 1.35;                             /* 饱和提拉 */
+  --dock-glass-sat: 1.15;                             /* 饱和提拉 */
   --dock-bottom-glow: radial-gradient(60% 120% at 50% 120%, rgba(255,255,255,.10), rgba(255,255,255,0) 70%);
   --dock-noise:
     radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,.10) 0, transparent 100%),
@@ -1218,9 +1218,7 @@ table tr:last-child td{ border-bottom-color: rgba(255,255,255,.08); }
 .subtotalDock .dockInner::before{
   content:"";
   position:absolute; inset:0; border-radius:inherit;
-  background: rgba(255,255,255,0.01);
-  backdrop-filter: blur(var(--dock-glass-blur)) saturate(var(--dock-glass-sat));
-  -webkit-backdrop-filter: blur(var(--dock-glass-blur)) saturate(var(--dock-glass-sat));
+  background: rgba(69, 68, 69, 0.4);
   z-index: 0;
   box-shadow: inset 0 0 0 1px var(--dock-glass-innerline);
 }
