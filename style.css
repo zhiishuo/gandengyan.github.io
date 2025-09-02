@@ -13,7 +13,7 @@
 
   /* 文本与状态色 */
   --ink:#f6f8fb; --muted: #e0e4ee;
-  --accent:#29d076; --warn:#ef4444; --info:#58c7f3;
+  --accent: #29e37f; --warn:#ef4444; --info:#58c7f3;
 
   --shadow: 0 12px 30px rgba(0,0,0,.24);
   --radius: 18px;
@@ -28,7 +28,7 @@
   --dock-h: 50px;           /* 小计条视觉高度 */
   --dock-gap: 20px;         /* 与底部栏垂直间距（备选） */
   --dock-alpha: .45;        /* 小计条内层半透明 */
-  --dock-maxw: 660px;       /* 最大宽度 */
+  --dock-maxw: 760px;       /* 最大宽度 */
   --dock-side-gap: 12px;    /* 小屏留白 */
 
   /* 小计条动画统一参数 */
@@ -78,7 +78,7 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
 
 .viewport{
   position: relative;
-  height: calc(100svh - var(--tabbar-h) - var(--tabbar-offset) - env(safe-area-inset-bottom));
+  height: calc(120svh - var(--tabbar-h) - var(--tabbar-offset) - env(safe-area-inset-bottom));
   overflow: hidden;           /* 只让里面滚 */
 }
 
@@ -99,7 +99,7 @@ h1{ margin:0; font-size:24px; letter-spacing:.3px }
   overflow: auto;             /* 仅这里滚动 */
   -webkit-overflow-scrolling: touch;
   /* 这条保留：底部为 Tab + 小计条 预留空间 */
-  
+
 }
 
 /* ========== 通用/面板/表格/输入 ========== */
@@ -291,7 +291,7 @@ th{color:#e8edf6; font-weight:600}
   padding:12px 14px;
   border:1px solid var(--chrome-line);
   border-radius:25px;
-  background: rgba(16, 24, 36, var(--dock-alpha));
+  background: rgba(200,200,200,0.07);
   border-color: var(--surface-tabbar-bd);
   color: var(--ink);
   backdrop-filter: blur(5px);
@@ -403,7 +403,7 @@ th{color:#e8edf6; font-weight:600}
 }
 .rankHeader .sub{
   margin-top: 6px;
-  font-size: 12px;
+  font-size: 18px;
   color: var(--muted);
 }
 /* 列表间距更紧凑，但可读 */
@@ -423,8 +423,8 @@ th{color:#e8edf6; font-weight:600}
   border-radius: 14px;
   display: grid;
   place-items: center;
-  font-weight: 900;
-  font-size: 22px;
+  font-weight: 700;
+  font-size: 27px;
   color: #0e1116;
   background: #c5c9d3;
   border: 1px solid rgba(255,255,255,.12);
@@ -648,7 +648,7 @@ html{ background: var(--surface-bg); }
 #winnerQuick{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .winnerBtn{
   background: transparent; border-color: var(--line); color: var(--ink);
-  padding: 8px 12px; min-height: 36px; border-radius: 999px;
+  padding: 12px 14px; min-height: 36px; border-radius: 999px;
 }
 .winnerBtn.accent{ background:#103b27; border-color:#1f7b4f; color:#d8ffe9; }
 .winnerRow{ background: rgba(78, 198, 52, 0.08); }
@@ -836,3 +836,198 @@ input.name {
   cursor: not-allowed;
   filter: grayscale(1);
 }
+
+/* ===== 美化底部 tabbar（玻璃+高亮指示+动效） ===== */
+
+/* 容器：半透明玻璃、圆角、居中、自适应安全区 */
+.tabbar{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-offset));
+  z-index: 60;
+
+  display: grid;
+  grid-auto-flow: column;
+  gap: 2px;
+
+  width: min(480px, calc(100% - 24px));
+  height: 78px;
+  padding: 6px;
+  border-radius: 999px;
+
+  background: rgba(14,18,28,.55);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  border: 1px solid rgba(180,190,210,.18);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* 按钮：去边框、柔和文字、水平排列图标+文字 */
+.tabbtn{
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  gap: 2px;
+
+  border: none;
+  background: transparent;
+  color: #cfd7e6;
+  font-size: 12px;
+  font-weight: 600;
+
+  border-radius: 999px;
+  padding: 6px 8px;
+  transition: color .18s ease, transform .12s ease, background .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 图标尺寸 */
+.tabbtn .ico{
+  width: 34px; height: 24px;
+  display: inline-grid; place-items: center;
+}
+.tabbtn .ico svg{
+  width: 100%; height: 100%;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* 活跃态：主色、微底光 */
+.tabbtn.active{
+  color: var(--accent);
+  background: linear-gradient(180deg, rgba(32,42,58,.35), rgba(16,23,35,.18));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+
+.tabbtn.active::after{ transform: translateX(-50%) scaleX(1); }
+
+/* 交互态：悬浮更亮、按压弹跳涟漪 */
+@media (hover:hover){
+  .tabbtn:hover{ color:#e9f2ff; background: rgba(255,255,255,.03); }
+}
+.tabbtn:active{ transform: translateY(1px) scale(.99); }
+.tabbtn:focus-visible{ outline:2px solid #3b82f6; outline-offset:2px; }
+
+/* 涟漪 */
+.tabbtn::before{
+  content:'';
+  position:absolute; inset:0;
+  border-radius:16px;
+  background: radial-gradient(40% 40% at center, rgba(255,255,255,.12), rgba(255,255,255,0) 70%);
+  opacity:0; transform: scale(.7);
+  transition: opacity .24s ease, transform .24s ease;
+  pointer-events:none;
+}
+.tabbtn:active::before{ opacity:1; transform: scale(1.05); }
+
+/* 激活动画：图标轻微弹跳 */
+@keyframes tabBounce{ 0%{transform:translateY(0)} 40%{transform:translateY(-3px)} 100%{transform:translateY(0)} }
+.tabbtn.active .ico{ animation: tabBounce .28s cubic-bezier(.22,.61,.36,1); }
+
+/* 可选：未读红点（在按钮内加一个 .dot 元素即可） */
+.tabbtn .dot{
+  position:absolute; top:8px; right:12px;
+  width:8px; height:8px; border-radius:999px;
+  background:#ef4444; box-shadow:0 0 10px rgba(239,68,68,.5);
+}
+
+/* 每个 page 底部补一段“滚动尾巴”，扩大可滑动距离 */
+.page{
+  position: relative;
+}
+
+
+
+.panel, .bombCard, .rankCard{
+  background: rgba(20,24,36,0.65);   /* 半透明，而不是纯色 */
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+html::before{
+  content:'';
+  position: fixed; inset: 0;
+  background: radial-gradient(800px 500px at 50% 100%, rgba(80,150,255,0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes bgFlow{
+  0%{ background-position: 0% 50%; }
+  100%{ background-position: 100% 50%; }
+}
+html{
+  background:
+    radial-gradient(800px 600px at 20% 20%, rgba(14, 91, 232, 0.12), transparent 70%),
+    radial-gradient(600px 400px at 80% 80%, rgba(218, 49, 124, 0.1), transparent 70%),
+    #0b0f18; /* 纯深底 */
+  background-attachment: fixed;
+}
+
+/* ① 面板抬升感 + 内发光边 */
+.panel{
+  position: relative;
+  overflow: clip;
+  box-shadow:
+    0 12px 30px rgba(92, 87, 87, 0.3),
+    0 1px 0 rgba(21, 17, 17, 0.05) inset,
+    0 0 0 1px rgba(213, 93, 93, 0.04) inset;
+}
+/* ② 面板顶部分隔线（“拉丝金属”质感） */
+.panel::before{
+  content:"";
+  position:absolute; inset:0 0 auto 0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(84, 83, 87, 0.18), transparent);
+  opacity:.8;
+}
+
+
+/* ④ 分隔线更精致（历史/表格/卡片通用） */
+.hr-soft{
+  height:1px; margin:10px 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+  border:0;
+}
+
+/* ⑤ 轻微悬浮动效（卡片/按钮可复用） */
+.hover-lift{
+  transition: transform .18s var(--trans-fast), box-shadow .18s var(--trans-fast);
+}
+@media(hover:hover){
+  .hover-lift:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(0,0,0,.32);
+  }
+}
+
+/* 排名卡右侧分数“数码滚动感” */
+.rankScore{
+  position:relative; overflow:hidden;
+}
+.rankScore.bump{
+  animation: scoreBump .38s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes scoreBump{
+  0%{ transform: translateY(0) }
+  45%{ transform: translateY(-2px) }
+  100%{ transform: translateY(0) }
+}
+
+/* 第一名绶带 */
+.rankCard:first-child::after{
+  content:"TOP 1";
+  position:absolute; right:-6px; top:10px;
+  font-size:10px; font-weight:800; letter-spacing:.6px;
+  transform: rotate(10deg);
+  padding:4px 8px; border-radius:6px;
+  color:#1a1d24; background: linear-gradient(135deg,#ffe28a,#ffbe55);
+  box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+
+/* 更细、更柔和的行分隔线；首末行淡化 */
+table tr td{ border-bottom: 1px dashed rgba(255,255,255,.14); }
+table tr:last-child td{ border-bottom-color: rgba(255,255,255,.08); }
