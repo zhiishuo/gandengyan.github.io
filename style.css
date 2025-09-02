@@ -353,7 +353,77 @@ th{color:#e8edf6; font-weight:600}
     border-color var(--dock-dur) var(--dock-ease);
 }
 .gbtn:active{ transform: translateY(0) scale(.98); transition-duration:.12s; }
-.gbtn.primary{ background:#103b27; border-color:#1f7b4f; color:#d8ffe9 }
+/* 入账按钮更大、更鲜艳 + 呼吸发光（绿色版本） */
+.gbtn.primary {
+  background: linear-gradient(180deg, #22c55e, #15803d); /* 鲜绿色渐变 */
+  border-color: #16a34a;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 16px 28px;
+  min-height: 54px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: .3px;
+
+  /* 光晕效果：绿色主调 */
+  box-shadow: 0 0 14px rgba(34,197,94,.55),
+              0 0 28px rgba(22,163,74,.35);
+
+  /* 呼吸动画 */
+  animation: incomePulseGreen 2.4s ease-in-out infinite;
+  transition: transform .15s ease, box-shadow .2s ease;
+}
+
+/* 呼吸式发光关键帧（绿色版） */
+@keyframes incomePulseGreen {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(34,197,94,.55),
+                0 0 28px rgba(22,163,74,.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 22px rgba(34,197,94,.75),
+                0 0 44px rgba(22,163,74,.45);
+  }
+}
+
+/* 悬停和点击状态 */
+@media (hover:hover){
+  .gbtn.primary:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 24px rgba(34,197,94,.85),
+                0 0 48px rgba(22,163,74,.55);
+  }
+}
+/* 点击时的趣味弹跳动画 */
+.gbtn.primary:active {
+  animation: incomeClick .35s cubic-bezier(.25,.8,.4,1);
+}
+
+/* 点击动画关键帧 */
+@keyframes incomeClick {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(34,197,94,.55),
+                0 0 28px rgba(22,163,74,.35);
+  }
+  40% {
+    transform: scale(0.92);  /* 先缩小一点 */
+    box-shadow: 0 0 10px rgba(34,197,94,.45),
+                0 0 20px rgba(22,163,74,.25);
+  }
+  70% {
+    transform: scale(1.08);  /* 再快速放大 */
+    box-shadow: 0 0 24px rgba(34,197,94,.75),
+                0 0 44px rgba(22,163,74,.45);
+  }
+  100% {
+    transform: scale(1);  /* 最终回到正常大小 */
+    box-shadow: 0 0 14px rgba(34,197,94,.55),
+                0 0 28px rgba(22,163,74,.35);
+  }
+}
 .gbtn.ghost{   background:#232222; border-color:var(--line); color:var(--ink) }
 .gbtn-ico{ display:inline-grid; place-items:center; width:1em; }
 
@@ -939,6 +1009,18 @@ input.name {
   position: relative;
 }
 
+.page::after{
+  content: '';
+  display: block;
+  height: calc(var(--reserved-bottom, 0px) + var(--scroll-extra, 260px));
+  /* ↑ 想更长就把 --scroll-extra 调大，比如 220px / 280px */
+}
+
+/* 只想让“记分”页更长：单独覆盖（可选） */
+.page[data-page="score"]::after{
+  height: calc(var(--reserved-bottom, 0px) + 300px);
+}
+
 
 
 .panel, .bombCard, .rankCard{
@@ -1031,3 +1113,4 @@ html{
 /* 更细、更柔和的行分隔线；首末行淡化 */
 table tr td{ border-bottom: 1px dashed rgba(255,255,255,.14); }
 table tr:last-child td{ border-bottom-color: rgba(255,255,255,.08); }
+
